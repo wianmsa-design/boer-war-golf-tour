@@ -137,6 +137,13 @@ function Alert(title: string, message: string, onConfirm: () => void) {
   ]);
 }
 
+/** A dismiss-only info popup — no confirm/cancel choice, just an acknowledgement. */
+function InfoAlert(title: string, message: string) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { Alert: RNAlert } = require('react-native');
+  RNAlert.alert(title, message);
+}
+
 function playerName(players: Player[], id: string | null): string {
   if (!id) return 'Unassigned';
   const p = players.find(pl => pl.id === id);
@@ -333,7 +340,7 @@ function ScorePicker({ score, onChange }: { score: MatchScore | null; onChange: 
             onPress={() => onChange(opt)}
             style={[styles.scoreChip, active && styles.scoreChipActive]}
           >
-            <Text style={[type.caption, active ? { color: colors.onAccent } : styles.subtext]}>{opt}</Text>
+            <Text style={[type.caption, styles.scoreChipText, active ? { color: colors.onAccent } : styles.subtext]}>{opt}</Text>
           </Pressable>
         );
       })}
@@ -341,9 +348,18 @@ function ScorePicker({ score, onChange }: { score: MatchScore | null; onChange: 
   );
 }
 
+function handleSubmitDay(dayLabel: string, allDecided: boolean) {
+  if (allDecided) {
+    InfoAlert(`${dayLabel} scores submitted`, `All ${dayLabel} results have been saved.`);
+  } else {
+    InfoAlert('Not all matches are complete', "What you've entered so far is already saved — finish the rest when you're ready.");
+  }
+}
+
 function Day1Scoring({ tournament }: { tournament: Tournament }) {
   const { data, setDay1Result } = useApp();
   if (!data) return null;
+  const allDecided = tournament.matches.day1.every(m => m.result !== null);
 
   return (
     <View style={styles.gap}>
@@ -358,6 +374,7 @@ function Day1Scoring({ tournament }: { tournament: Tournament }) {
           onSetResult={(result, score) => setDay1Result(tournament.id, i, result, score)}
         />
       ))}
+      <Button label="Submit Day 1 Scores" onPress={() => handleSubmitDay('Day 1', allDecided)} />
     </View>
   );
 }
@@ -365,6 +382,7 @@ function Day1Scoring({ tournament }: { tournament: Tournament }) {
 function Day2Scoring({ tournament }: { tournament: Tournament }) {
   const { data, setDay2Result } = useApp();
   if (!data) return null;
+  const allDecided = tournament.matches.day2.every(m => m.result !== null);
 
   return (
     <View style={styles.gap}>
@@ -379,6 +397,7 @@ function Day2Scoring({ tournament }: { tournament: Tournament }) {
           onSetResult={(result, score) => setDay2Result(tournament.id, i, result, score)}
         />
       ))}
+      <Button label="Submit Day 2 Scores" onPress={() => handleSubmitDay('Day 2', allDecided)} />
     </View>
   );
 }
@@ -453,9 +472,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.pill,
-    paddingVertical: 6,
-    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+    minWidth: 40,
+    alignItems: 'center',
   },
   scoreChipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+  scoreChipText: { fontSize: 10 },
   scoringNames: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
 });
