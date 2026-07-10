@@ -39,8 +39,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   segmentActive: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.accentMuted,
   },
   label: { color: colors.subtext },
-  labelActive: { color: colors.onAccent },
+  labelActive: { color: colors.accent },
 });

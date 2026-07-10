@@ -1,8 +1,9 @@
 // Design system tokens. App is dark-mode only — no light variant.
 //
-// Rule: team colours (boere/british) are reserved for exactly one place —
-// the ring around a player icon. Everywhere else (scores, standings, stat
-// text, buttons) uses the neutral white/grey palette + the mint accent below.
+// Rule: team colours (boere/british) have no UI presence at all — the icon
+// artwork itself (flag vs Union Jack) is what tells the teams apart. Every
+// other color signal (scores, standings, stat text, buttons, rings) uses the
+// neutral white/grey palette + the accent below.
 
 export const colors = {
   bg: '#101513',
@@ -14,23 +15,16 @@ export const colors = {
   divider: 'rgba(255,255,255,0.06)',
   dimmed: 'rgba(0,0,0,0.5)',
 
-  // Interactive accent — bright mint. Used for buttons, links, active
-  // states, focus rings. Deliberately outside the orange/blue team space.
-  accent: '#00FFBA',
-  accentPressed: '#00CC94',
-  accentMuted: 'rgba(0,255,186,0.14)',
-  onAccent: '#0B1512',
+  // Interactive accent — red-orange. Used generously: buttons, active
+  // states, borders, focus rings, headline stat values.
+  accent: '#FF5533',
+  accentPressed: '#E0432A',
+  accentMuted: 'rgba(255,85,51,0.16)',
+  onAccent: '#1A0D08',
 
   success: '#4CAF7D',
   danger: '#D9534F',
   dangerMuted: 'rgba(217,83,79,0.16)',
-
-  team: {
-    boere: '#E2622A',
-    boereMuted: 'rgba(226,98,42,0.16)',
-    british: '#3D7FE0',
-    britishMuted: 'rgba(61,127,224,0.16)',
-  },
 } as const;
 
 export const spacing = {
@@ -61,14 +55,6 @@ export const type = {
   smallStrong: { fontSize: 13, fontWeight: '700' as const },
   caption: { fontSize: 11, fontWeight: '600' as const, letterSpacing: 0.4 },
 } as const;
-
-export function teamColor(team: 'boere' | 'british'): string {
-  return team === 'boere' ? colors.team.boere : colors.team.british;
-}
-
-export function teamMutedColor(team: 'boere' | 'british'): string {
-  return team === 'boere' ? colors.team.boereMuted : colors.team.britishMuted;
-}
 
 export function teamLabel(team: 'boere' | 'british'): string {
   return team === 'boere' ? 'Boere' : 'British';

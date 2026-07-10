@@ -188,6 +188,10 @@ function PlayersTab({ tournaments, players }: { tournaments: import('../models')
           </Card>
         </View>
       )}
+
+      <Text style={[type.caption, styles.subtext, styles.legend]}>
+        Tap a player to expand. TRN Tournaments · TEAM Team Results · FB Four-Ball · SGL Singles · PF Points For · PA Points Against
+      </Text>
     </View>
   );
 }
@@ -203,4 +207,5 @@ const styles = StyleSheet.create({
   splitDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: colors.border, marginVertical: spacing.xs },
   sectionTitle: { paddingHorizontal: spacing.xs },
   tableCard: { padding: spacing.sm, gap: 0 },
+  legend: { textAlign: 'center', paddingHorizontal: spacing.md, lineHeight: 16 },
 });

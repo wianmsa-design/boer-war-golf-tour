@@ -1,6 +1,7 @@
 import React from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { TeamId } from '../models';
+import { colors } from '../theme';
 
 interface Props {
   team: TeamId;
@@ -25,5 +26,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+    borderWidth: 3,
+    borderColor: colors.accent,
   },
 });

@@ -11,7 +11,7 @@ import { useApp } from '../../services/AppContext';
 import { getAllCourses, rememberCustomCourse } from '../../services/courses';
 import { getTournament } from '../../services/stats';
 import { RosterEntry, Tournament } from '../../models';
-import { colors, spacing, type } from '../../theme';
+import { colors, radius, spacing, type } from '../../theme';
 
 type CourseMode = 'Same course' | 'Different per day';
 
@@ -55,10 +55,13 @@ function AllTournamentsList({ tournaments, currentTournamentId }: { tournaments:
           <View key={t.id} style={styles.tournamentRow}>
             <View style={styles.tournamentInfo}>
               <Text style={[type.bodyStrong, styles.text]}>{t.name}</Text>
-              <Text style={[type.small, styles.subtext]}>
-                {t.status === 'active' ? 'Active' : 'Ended'}{t.id === currentTournamentId ? ' · Current' : ''}
-              </Text>
+              <Text style={[type.small, styles.subtext]}>{t.year}</Text>
             </View>
+            {t.status === 'active' && (
+              <View style={styles.statusPill}>
+                <Text style={[type.caption, { color: colors.accent }]}>ACTIVE</Text>
+              </View>
+            )}
             <Pressable onPress={() => handleDelete(t)} hitSlop={10}>
               <Ionicons name="trash-outline" size={18} color={colors.danger} />
             </Pressable>
@@ -161,11 +164,11 @@ function PlayersPerTeamStepper({ value, onChange }: { value: number; onChange: (
       <Text style={[type.caption, styles.subtext]}>PLAYERS PER TEAM</Text>
       <View style={styles.stepper}>
         <Pressable style={styles.stepperBtn} onPress={() => onChange(Math.max(2, value - 2))}>
-          <Ionicons name="remove" size={18} color={colors.text} />
+          <Ionicons name="remove" size={18} color={colors.accent} />
         </Pressable>
         <Text style={[type.h2, styles.text, styles.stepperValue]}>{value}</Text>
         <Pressable style={styles.stepperBtn} onPress={() => onChange(value + 2)}>
-          <Ionicons name="add" size={18} color={colors.text} />
+          <Ionicons name="add" size={18} color={colors.accent} />
         </Pressable>
       </View>
       <Text style={[type.small, styles.subtext]}>{value} per team → {value * 2} players</Text>
@@ -394,7 +397,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: colors.accentMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -411,5 +414,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.divider,
   },
-  tournamentInfo: { gap: 2 },
+  tournamentInfo: { flex: 1, gap: 2 },
+  statusPill: {
+    backgroundColor: colors.accentMuted,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    marginRight: spacing.sm,
+  },
 });

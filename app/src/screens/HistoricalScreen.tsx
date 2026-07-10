@@ -114,7 +114,7 @@ function PastTournamentRow({ tournament, onPress }: { tournament: Tournament; on
             <Text style={[type.caption, styles.subtext]}>BRIT</Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.subtext} />
+        <Ionicons name="chevron-forward" size={18} color={colors.accent} />
       </Card>
     </Pressable>
   );
