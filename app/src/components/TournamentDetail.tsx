@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Day1Match, Day2Match, formatHandicap, Player, TeamId, Tournament } from '../models';
+import { Day1Match, Day2Match, formatHandicap, MatchOutcome, Player, TeamId, Tournament } from '../models';
 import { computeStanding, playerPointsInTournament } from '../services/stats';
 import { colors, spacing, teamLabel, type } from '../theme';
 import Card from './Card';
@@ -71,8 +71,8 @@ export default function TournamentDetail({ tournament, players }: Props) {
             label={`Match ${m.match}`}
             boere={m.boere.map(id => firstNameFor(players, id)).join(' & ')}
             british={m.british.map(id => firstNameFor(players, id)).join(' & ')}
+            result={m.result}
             outcome={outcomeLabel(m)}
-            decided={m.result !== null}
           />
         ))}
       </Section>
@@ -84,8 +84,8 @@ export default function TournamentDetail({ tournament, players }: Props) {
             label={`Match ${m.match}`}
             boere={firstNameFor(players, m.boere)}
             british={firstNameFor(players, m.british)}
+            result={m.result}
             outcome={outcomeLabel(m)}
-            decided={m.result !== null}
           />
         ))}
       </Section>
@@ -133,22 +133,23 @@ function MatchRow({
   label,
   boere,
   british,
+  result,
   outcome,
-  decided,
 }: {
   label: string;
   boere: string;
   british: string;
+  result: MatchOutcome | null;
   outcome: string;
-  decided: boolean;
 }) {
+  const decided = result !== null;
   return (
     <View style={styles.matchRow}>
       <Text style={[type.caption, styles.subtext, styles.center]}>{label}</Text>
       <View style={styles.matchPlayers}>
-        <Text style={[type.body, styles.text]} numberOfLines={1}>{boere}</Text>
+        <Text style={[type.body, result === 'boere' ? { color: colors.accent } : styles.text]} numberOfLines={1}>{boere}</Text>
         <Text style={[type.small, styles.subtext]}>vs</Text>
-        <Text style={[type.body, styles.text]} numberOfLines={1}>{british}</Text>
+        <Text style={[type.body, result === 'british' ? { color: colors.accent } : styles.text]} numberOfLines={1}>{british}</Text>
       </View>
       <Text style={[type.small, decided ? styles.text : styles.subtext, styles.center]}>{outcome}</Text>
     </View>
@@ -198,5 +199,5 @@ const styles = StyleSheet.create({
   lbIcon: { width: 32, alignItems: 'center' },
   lbName: { flex: 1 },
   lbHcp: { width: 40, textAlign: 'center' },
-  lbPts: { width: 36, textAlign: 'right' },
+  lbPts: { width: 36, textAlign: 'center' },
 });
