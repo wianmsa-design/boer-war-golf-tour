@@ -1,5 +1,5 @@
 import { fetchData } from './api.js';
-import { playerFullName, formatHandicap, teamLabel } from './models.js';
+import { playerFullName, formatHandicap } from './models.js';
 import {
   getTournament,
   computeStanding,
@@ -20,6 +20,7 @@ const state = {
   statsSubTab: 'teams', // 'teams' | 'players'
   historicalSubTab: 'recent', // 'recent' | 'past'
   selectedPastTournamentId: null,
+  expandedPlayerIds: new Set(),
 };
 
 const root = document.getElementById('app');
@@ -46,15 +47,14 @@ async function load() {
 // ---------------------------------------------------------------------------
 
 function playerIcon(player, team) {
-  const initials = `${player.firstName[0] ?? ''}${player.surname[0] ?? ''}`.toUpperCase();
-  const cls = team ? `player-icon ${team}` : 'player-icon';
-  return `<span class="${cls}">${esc(initials)}</span>`;
+  if (!team) return `<span class="player-icon"></span>`;
+  return `<img class="player-icon ${team}" src="assets/team/${team}_icon_96.png" alt="" />`;
 }
 
-function playerNameById(players, id) {
+function firstNameById(players, id) {
   if (!id) return 'TBC';
   const p = players.find(pl => pl.id === id);
-  return p ? esc(playerFullName(p)) : 'Unknown player';
+  return p ? esc(p.firstName) : 'Unknown';
 }
 
 function outcomeLabel(m) {
@@ -69,57 +69,56 @@ function tournamentDetailHtml(tournament, players) {
   const sameCourse = tournament.courses.day1 === tournament.courses.day2;
   const tied = standing.boere === standing.british && tournament.status === 'ended';
 
-  const rosterIds = [
-    ...tournament.rosters.boere.map(r => r.playerId),
-    ...tournament.rosters.british.map(r => r.playerId),
-  ];
-
   const day1Rows = tournament.matches.day1.map(m => `
     <div class="match-row">
-      <div class="caption subtext">Match ${m.match}</div>
+      <div class="caption subtext center-text">Match ${m.match}</div>
       <div class="match-players">
-        <span class="boere-text body">${m.boere.map(id => playerNameById(players, id)).join(' &amp; ')}</span>
+        <span class="boere-text body">${m.boere.map(id => firstNameById(players, id)).join(' &amp; ')}</span>
         <span class="small subtext">vs</span>
-        <span class="british-text body">${m.british.map(id => playerNameById(players, id)).join(' &amp; ')}</span>
+        <span class="british-text body">${m.british.map(id => firstNameById(players, id)).join(' &amp; ')}</span>
       </div>
-      <div class="small ${m.result !== null ? '' : 'subtext'}">${outcomeLabel(m)}</div>
+      <div class="small center-text ${m.result !== null ? '' : 'subtext'}">${outcomeLabel(m)}</div>
     </div>
   `).join('');
 
   const day2Rows = tournament.matches.day2.map(m => `
     <div class="match-row">
-      <div class="caption subtext">Match ${m.match}</div>
+      <div class="caption subtext center-text">Match ${m.match}</div>
       <div class="match-players">
-        <span class="boere-text body">${playerNameById(players, m.boere)}</span>
+        <span class="boere-text body">${firstNameById(players, m.boere)}</span>
         <span class="small subtext">vs</span>
-        <span class="british-text body">${playerNameById(players, m.british)}</span>
+        <span class="british-text body">${firstNameById(players, m.british)}</span>
       </div>
-      <div class="small ${m.result !== null ? '' : 'subtext'}">${outcomeLabel(m)}</div>
+      <div class="small center-text ${m.result !== null ? '' : 'subtext'}">${outcomeLabel(m)}</div>
     </div>
   `).join('');
 
-  const playerRows = rosterIds.map(id => {
-    const player = players.find(p => p.id === id);
+  const leaderboard = [
+    ...tournament.rosters.boere.map(r => ({ ...r, team: 'boere' })),
+    ...tournament.rosters.british.map(r => ({ ...r, team: 'british' })),
+  ]
+    .map(entry => ({ entry, points: playerPointsInTournament(tournament, entry.playerId) }))
+    .sort((a, b) => b.points - a.points);
+
+  const leaderboardRows = leaderboard.map(({ entry, points }, i) => {
+    const player = players.find(p => p.id === entry.playerId);
     if (!player) return '';
-    const onBoere = tournament.rosters.boere.some(r => r.playerId === id);
-    const team = onBoere ? 'boere' : 'british';
-    const rosterEntry = (onBoere ? tournament.rosters.boere : tournament.rosters.british).find(r => r.playerId === id);
-    const points = playerPointsInTournament(tournament, id);
-    const hcp = rosterEntry && rosterEntry.handicap !== null ? `<span class="small subtext">${esc(formatHandicap(rosterEntry.handicap))}</span>` : '';
+    const hcp = entry.handicap !== null ? esc(formatHandicap(entry.handicap)) : '—';
     return `
-      <div class="player-row">
-        ${playerIcon(player, team)}
-        <span class="body name">${esc(playerFullName(player))}</span>
-        ${hcp}
-        <span class="small-strong ${team}-text">${points} pts</span>
+      <div class="lb-row">
+        <span class="small subtext lb-pos">${i + 1}</span>
+        <span class="lb-icon">${playerIcon(player, entry.team)}</span>
+        <span class="body lb-name">${esc(player.firstName)}</span>
+        <span class="small subtext lb-hcp">${hcp}</span>
+        <span class="small-strong ${entry.team}-text lb-pts">${points}</span>
       </div>
     `;
   }).join('');
 
   return `
     <div class="card">
-      <div class="h1">${esc(tournament.name)}</div>
-      <div class="small subtext">${sameCourse ? esc(tournament.courses.day1) : `Day 1: ${esc(tournament.courses.day1)} · Day 2: ${esc(tournament.courses.day2)}`}</div>
+      <div class="h1 center-text">${esc(tournament.name)}</div>
+      <div class="small subtext center-text">${sameCourse ? esc(tournament.courses.day1) : `Day 1: ${esc(tournament.courses.day1)} · Day 2: ${esc(tournament.courses.day2)}`}</div>
       <div class="standing-row">
         <span class="score boere-text">${standing.boere}</span>
         <span class="h2 subtext">${tied ? 'Tied' : 'vs'}</span>
@@ -138,7 +137,16 @@ function tournamentDetailHtml(tournament, players) {
     <div class="card">${day2Rows}</div>
 
     <div class="caption subtext section-title">Players</div>
-    <div class="card">${playerRows}</div>
+    <div class="card lb-card">
+      <div class="lb-row lb-header">
+        <span class="caption subtext lb-pos">#</span>
+        <span class="lb-icon"></span>
+        <span class="caption subtext lb-name">PLAYER</span>
+        <span class="caption subtext lb-hcp">HCP</span>
+        <span class="caption subtext lb-pts">PTS</span>
+      </div>
+      ${leaderboardRows}
+    </div>
   `;
 }
 
@@ -168,50 +176,58 @@ function renderTeamsStats() {
   const stats = computeTeamStats(state.data.tournaments);
   const { boere, british } = stats;
   const fbSg = (t) => `FB ${t.fourBall.winPct.toFixed(0)}%  ·  SG ${t.singles.winPct.toFixed(0)}%`;
+  const streakStr = (n) => n > 0 ? `${n} win${n > 1 ? 's' : ''}` : '—';
   return `
     <div class="card">
       <div class="emblem-row">
         <div class="emblem-col">
-          <div class="emblem boere">BO</div>
+          <img class="emblem" src="assets/team/boere_emblem_512.png" alt="Boere emblem" />
           <div class="small-strong boere-text">The Boere</div>
         </div>
         <div class="h2 subtext">vs</div>
         <div class="emblem-col">
-          <div class="emblem british">BR</div>
+          <img class="emblem" src="assets/team/british_emblem_512.png" alt="British emblem" />
           <div class="small-strong british-text">The British</div>
         </div>
       </div>
     </div>
     <div class="card">
-      <div class="caption subtext">Record (W-L-D)</div>
+      <div class="caption subtext center-text">Record (W-L-D)</div>
       <div class="compare-row">
         <span class="body-strong boere-text">${boere.record.wins}-${boere.record.losses}-${boere.record.draws}</span>
         <span class="body-strong british-text">${british.record.wins}-${british.record.losses}-${british.record.draws}</span>
       </div>
     </div>
     <div class="card">
-      <div class="caption subtext">Points For / Against</div>
+      <div class="caption subtext center-text">Points For / Against</div>
       <div class="compare-row">
         <span class="body-strong boere-text">${boere.pointsFor} / ${boere.pointsAgainst}</span>
         <span class="body-strong british-text">${british.pointsFor} / ${british.pointsAgainst}</span>
       </div>
     </div>
     <div class="card">
-      <div class="caption subtext">Biggest Tournament Win Margin</div>
+      <div class="caption subtext center-text">Biggest Tournament Win Margin</div>
       <div class="compare-row">
         <span class="body-strong boere-text">${boere.biggestWinMargin !== null ? boere.biggestWinMargin : '—'}</span>
         <span class="body-strong british-text">${british.biggestWinMargin !== null ? british.biggestWinMargin : '—'}</span>
       </div>
     </div>
     <div class="card">
-      <div class="caption subtext">Current Streak</div>
+      <div class="caption subtext center-text">Current Streak</div>
       <div class="compare-row">
-        <span class="body-strong boere-text">${boere.currentStreak > 0 ? boere.currentStreak + ' win' + (boere.currentStreak > 1 ? 's' : '') : '—'}</span>
-        <span class="body-strong british-text">${british.currentStreak > 0 ? british.currentStreak + ' win' + (british.currentStreak > 1 ? 's' : '') : '—'}</span>
+        <span class="body-strong boere-text">${streakStr(boere.currentStreak)}</span>
+        <span class="body-strong british-text">${streakStr(british.currentStreak)}</span>
       </div>
     </div>
     <div class="card">
-      <div class="caption subtext">Four-ball vs Singles</div>
+      <div class="caption subtext center-text">Best Streak</div>
+      <div class="compare-row">
+        <span class="body-strong boere-text">${streakStr(boere.bestStreak)}</span>
+        <span class="body-strong british-text">${streakStr(british.bestStreak)}</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="caption subtext center-text">Four-ball vs Singles</div>
       <div class="compare-row">
         <span class="body-strong boere-text">${fbSg(boere)}</span>
         <span class="body-strong british-text">${fbSg(british)}</span>
@@ -220,26 +236,52 @@ function renderTeamsStats() {
   `;
 }
 
-function playerStatCardHtml(player, s, rankLabel, displayWinPct) {
+function combinedRecord(s) {
+  return {
+    wins: s.fourBall.wins + s.singles.wins,
+    losses: s.fourBall.losses + s.singles.losses,
+    draws: s.fourBall.draws + s.singles.draws,
+  };
+}
+
+function playerTableHeaderHtml() {
+  return `
+    <div class="lb-row lb-header">
+      <span class="caption subtext lb-pos">POS</span>
+      <span class="lb-icon"></span>
+      <span class="caption subtext lb-name">PLAYER</span>
+      <span class="caption subtext pt-record">W-L-D</span>
+      <span class="caption subtext pt-pct">WIN%</span>
+    </div>
+  `;
+}
+
+function playerRowHtml(player, s, rankLabel, displayWinPct) {
   const team = s.mostRecentTeam;
   const pct = displayWinPct !== undefined ? displayWinPct : Math.round(s.winPct * 10) / 10;
   const fmt = r => `${r.wins}-${r.losses}-${r.draws}`;
+  const record = combinedRecord(s);
+  const expanded = state.expandedPlayerIds.has(s.playerId);
   return `
-    <div class="card">
-      <div class="rank-header">
-        ${rankLabel ? `<span class="rank">${esc(rankLabel)}</span>` : ''}
-        ${team ? playerIcon(player, team) : ''}
-        <span class="body-strong name">${esc(playerFullName(player))}</span>
-        <span class="h2 ${team ? team + '-text' : ''}">${pct.toFixed(1)}%</span>
+    <div class="pt-wrap">
+      <div class="lb-row pt-row" data-action="toggle-player" data-value="${esc(s.playerId)}">
+        <span class="small-strong subtext lb-pos" style="color:var(--accent)">${esc(rankLabel ?? '—')}</span>
+        <span class="lb-icon">${team ? playerIcon(player, team) : ''}</span>
+        <span class="body lb-name">${esc(playerFullName(player))}</span>
+        <span class="small pt-record">${fmt(record)}</span>
+        <span class="small-strong ${team ? team + '-text' : ''} pt-pct">${pct.toFixed(1)}%</span>
+        <span class="chev">${expanded ? '⌃' : '⌄'}</span>
       </div>
-      <div class="stat-grid">
-        <div class="stat-cell"><div class="caption label">Tournaments</div><div class="value body-strong">${s.tournamentsPlayed}</div></div>
-        <div class="stat-cell"><div class="caption label">Team Results</div><div class="value body-strong">${fmt(s.teamResults)}</div></div>
-        <div class="stat-cell"><div class="caption label">Four-Ball</div><div class="value body-strong">${fmt(s.fourBall)}</div></div>
-        <div class="stat-cell"><div class="caption label">Matchplay</div><div class="value body-strong">${fmt(s.singles)}</div></div>
-        <div class="stat-cell"><div class="caption label">Points For</div><div class="value body-strong">${s.pointsFor}</div></div>
-        <div class="stat-cell"><div class="caption label">Points Against</div><div class="value body-strong">${s.pointsAgainst}</div></div>
-      </div>
+      ${expanded ? `
+        <div class="stat-grid pt-detail">
+          <div class="stat-cell"><div class="caption label">Tournaments</div><div class="value body-strong">${s.tournamentsPlayed}</div></div>
+          <div class="stat-cell"><div class="caption label">Team Results</div><div class="value body-strong">${fmt(s.teamResults)}</div></div>
+          <div class="stat-cell"><div class="caption label">Four-Ball</div><div class="value body-strong">${fmt(s.fourBall)}</div></div>
+          <div class="stat-cell"><div class="caption label">Matchplay</div><div class="value body-strong">${fmt(s.singles)}</div></div>
+          <div class="stat-cell"><div class="caption label">Points For</div><div class="value body-strong">${s.pointsFor}</div></div>
+          <div class="stat-cell"><div class="caption label">Points Against</div><div class="value body-strong">${s.pointsAgainst}</div></div>
+        </div>
+      ` : ''}
     </div>
   `;
 }
@@ -249,10 +291,10 @@ function renderPlayersStats() {
   const { ranked, insufficient } = rankPlayers(all);
   const byId = id => state.data.players.find(p => p.id === id);
 
-  const rankedHtml = ranked.map(r => playerStatCardHtml(byId(r.playerId), r, r.rankLabel, r.displayWinPct)).join('');
+  const rankedHtml = `<div class="card lb-card">${playerTableHeaderHtml()}${ranked.map(r => playerRowHtml(byId(r.playerId), r, r.rankLabel, r.displayWinPct)).join('')}</div>`;
   const insufficientHtml = insufficient.length
     ? `<div class="caption subtext section-title">Insufficient tournaments (min. 2)</div>` +
-      insufficient.map(s => playerStatCardHtml(byId(s.playerId), s)).join('')
+      `<div class="card lb-card">${playerTableHeaderHtml()}${insufficient.map(s => playerRowHtml(byId(s.playerId), s)).join('')}</div>`
     : '';
 
   return rankedHtml + insufficientHtml;
@@ -328,9 +370,12 @@ function renderHistoricalTab() {
 // Shell
 // ---------------------------------------------------------------------------
 
+const TAB_TITLES = { stats: 'Stats', current: 'Active Tournament', historical: 'Historical' };
+
 function render() {
   if (state.error && !state.data) {
     root.innerHTML = `
+      <div class="page-title">Boer War Golf Tour</div>
       <div class="card">
         <div class="h2">Couldn't load data</div>
         <div class="body subtext">${esc(state.error)}</div>
@@ -342,9 +387,11 @@ function render() {
   }
 
   if (!state.data) {
-    root.innerHTML = `<div class="loading">Loading…</div>`;
+    root.innerHTML = `<div class="page-title">Boer War Golf Tour</div><div class="loading">Loading…</div>`;
     return;
   }
+
+  const title = `<div class="page-title">${esc(TAB_TITLES[state.tab])}</div>`;
 
   const tabs = `
     <div class="tabbar">
@@ -359,7 +406,7 @@ function render() {
   else if (state.tab === 'current') content = renderCurrentTab();
   else content = renderHistoricalTab();
 
-  root.innerHTML = tabs + content + `<button class="refresh-btn" data-action="refresh">Refresh</button>`;
+  root.innerHTML = title + tabs + content + `<button class="refresh-btn" data-action="refresh">Refresh</button>`;
   attachHandlers();
 }
 
@@ -373,6 +420,10 @@ function attachHandlers() {
       else if (action === 'historical-sub') { state.historicalSubTab = value; state.selectedPastTournamentId = null; }
       else if (action === 'select-past') state.selectedPastTournamentId = value;
       else if (action === 'clear-past-selection') state.selectedPastTournamentId = null;
+      else if (action === 'toggle-player') {
+        if (state.expandedPlayerIds.has(value)) state.expandedPlayerIds.delete(value);
+        else state.expandedPlayerIds.add(value);
+      }
       else if (action === 'refresh') { load(); return; }
       render();
     });

@@ -1,23 +1,26 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, StyleSheet, Text, View } from 'react-native';
 import Screen from '../components/Screen';
 import Card from '../components/Card';
 import SegmentedControl from '../components/SegmentedControl';
 import TeamEmblem from '../components/TeamEmblem';
-import PlayerStatCard from '../components/PlayerStatCard';
+import PlayerStatsRow, { PlayerTableHeader } from '../components/PlayerStatsTable';
 import { useApp } from '../services/AppContext';
+import { useAnimatedTab } from '../hooks/useAnimatedTab';
 import { computeAllPlayerStats, computeTeamStats, rankPlayers, TeamStats } from '../services/stats';
 import { colors, spacing, teamColor, teamLabel, type } from '../theme';
 
-type SubTab = 'Teams' | 'Players';
+const SUB_TABS = ['Teams', 'Players'] as const;
+type SubTab = typeof SUB_TABS[number];
 
 export default function StatsScreen() {
   const { data, loading, refreshing, error, refresh } = useApp();
   const [tab, setTab] = useState<SubTab>('Teams');
+  const { panHandlers, animStyle, setTabAnimated } = useAnimatedTab(SUB_TABS, tab, setTab);
 
   if (loading && !data) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} title="Stats">
         <View style={styles.centered}>
           <ActivityIndicator color={colors.accent} />
         </View>
@@ -27,7 +30,7 @@ export default function StatsScreen() {
 
   if (error && !data) {
     return (
-      <Screen onRefresh={refresh} refreshing={refreshing}>
+      <Screen onRefresh={refresh} refreshing={refreshing} title="Stats">
         <Card>
           <Text style={[type.h2, styles.text]}>Couldn't load data</Text>
           <Text style={[type.body, styles.subtext]}>{error}</Text>
@@ -41,17 +44,21 @@ export default function StatsScreen() {
   const endedCount = data.tournaments.filter(t => t.status === 'ended').length;
 
   return (
-    <Screen onRefresh={refresh} refreshing={refreshing}>
-      <SegmentedControl options={['Teams', 'Players'] as const} value={tab} onChange={setTab} />
+    <Screen onRefresh={refresh} refreshing={refreshing} title="Stats">
+      <SegmentedControl options={SUB_TABS} value={tab} onChange={setTabAnimated} />
       {endedCount === 0 ? (
         <Card>
           <Text style={[type.h2, styles.text]}>No stats yet</Text>
           <Text style={[type.body, styles.subtext]}>Stats appear here once a tournament has ended.</Text>
         </Card>
-      ) : tab === 'Teams' ? (
-        <TeamsTab tournaments={data.tournaments} />
       ) : (
-        <PlayersTab tournaments={data.tournaments} players={data.players} />
+        <Animated.View style={animStyle} {...panHandlers}>
+          {tab === 'Teams' ? (
+            <TeamsTab tournaments={data.tournaments} />
+          ) : (
+            <PlayersTab tournaments={data.tournaments} players={data.players} />
+          )}
+        </Animated.View>
       )}
     </Screen>
   );
@@ -80,7 +87,7 @@ function TeamsTab({ tournaments }: { tournaments: import('../models').Tournament
       </Card>
 
       <Card>
-        <Text style={[type.caption, styles.subtext]}>POINTS FOR / AGAINST</Text>
+        <Text style={[type.caption, styles.subtext, styles.centerText]}>POINTS FOR / AGAINST</Text>
         <CompareRow
           boereValue={`${stats.boere.pointsFor} / ${stats.boere.pointsAgainst}`}
           britishValue={`${stats.british.pointsFor} / ${stats.british.pointsAgainst}`}
@@ -88,7 +95,7 @@ function TeamsTab({ tournaments }: { tournaments: import('../models').Tournament
       </Card>
 
       <Card>
-        <Text style={[type.caption, styles.subtext]}>BIGGEST TOURNAMENT WIN MARGIN</Text>
+        <Text style={[type.caption, styles.subtext, styles.centerText]}>BIGGEST TOURNAMENT WIN MARGIN</Text>
         <CompareRow
           boereValue={stats.boere.biggestWinMargin !== null ? `${stats.boere.biggestWinMargin}` : '—'}
           britishValue={stats.british.biggestWinMargin !== null ? `${stats.british.biggestWinMargin}` : '—'}
@@ -96,7 +103,7 @@ function TeamsTab({ tournaments }: { tournaments: import('../models').Tournament
       </Card>
 
       <Card>
-        <Text style={[type.caption, styles.subtext]}>CURRENT STREAK</Text>
+        <Text style={[type.caption, styles.subtext, styles.centerText]}>CURRENT STREAK</Text>
         <CompareRow
           boereValue={stats.boere.currentStreak > 0 ? `${stats.boere.currentStreak} win${stats.boere.currentStreak > 1 ? 's' : ''}` : '—'}
           britishValue={stats.british.currentStreak > 0 ? `${stats.british.currentStreak} win${stats.british.currentStreak > 1 ? 's' : ''}` : '—'}
@@ -104,7 +111,15 @@ function TeamsTab({ tournaments }: { tournaments: import('../models').Tournament
       </Card>
 
       <Card>
-        <Text style={[type.caption, styles.subtext]}>FOUR-BALL vs SINGLES</Text>
+        <Text style={[type.caption, styles.subtext, styles.centerText]}>BEST STREAK</Text>
+        <CompareRow
+          boereValue={stats.boere.bestStreak > 0 ? `${stats.boere.bestStreak} win${stats.boere.bestStreak > 1 ? 's' : ''}` : '—'}
+          britishValue={stats.british.bestStreak > 0 ? `${stats.british.bestStreak} win${stats.british.bestStreak > 1 ? 's' : ''}` : '—'}
+        />
+      </Card>
+
+      <Card>
+        <Text style={[type.caption, styles.subtext, styles.centerText]}>FOUR-BALL vs SINGLES</Text>
         <CompareRow
           boereValue={`FB ${stats.boere.fourBall.winPct.toFixed(0)}%  ·  SG ${stats.boere.singles.winPct.toFixed(0)}%`}
           britishValue={`FB ${stats.british.fourBall.winPct.toFixed(0)}%  ·  SG ${stats.british.singles.winPct.toFixed(0)}%`}
@@ -117,7 +132,7 @@ function TeamsTab({ tournaments }: { tournaments: import('../models').Tournament
 function RecordRow({ boere, british }: { boere: TeamStats; british: TeamStats }) {
   return (
     <View>
-      <Text style={[type.caption, styles.subtext]}>RECORD (W-L-D)</Text>
+      <Text style={[type.caption, styles.subtext, styles.centerText]}>RECORD (W-L-D)</Text>
       <CompareRow
         boereValue={`${boere.record.wins}-${boere.record.losses}-${boere.record.draws}`}
         britishValue={`${british.record.wins}-${british.record.losses}-${british.record.draws}`}
@@ -145,18 +160,24 @@ function PlayersTab({ tournaments, players }: { tournaments: import('../models')
 
   return (
     <View style={styles.gap}>
-      {ranked.map(r => (
-        <PlayerStatCard key={r.playerId} player={playerById(r.playerId)} stats={r} rankLabel={r.rankLabel} displayWinPct={r.displayWinPct} />
-      ))}
+      <Card style={styles.tableCard}>
+        <PlayerTableHeader />
+        {ranked.map(r => (
+          <PlayerStatsRow key={r.playerId} player={playerById(r.playerId)} stats={r} rankLabel={r.rankLabel} displayWinPct={r.displayWinPct} />
+        ))}
+      </Card>
 
       {insufficient.length > 0 && (
         <View style={styles.gap}>
           <Text style={[type.caption, styles.subtext, styles.sectionTitle]}>
             INSUFFICIENT TOURNAMENTS (MIN. 2)
           </Text>
-          {insufficient.map(s => (
-            <PlayerStatCard key={s.playerId} player={playerById(s.playerId)} stats={s} />
-          ))}
+          <Card style={styles.tableCard}>
+            <PlayerTableHeader />
+            {insufficient.map(s => (
+              <PlayerStatsRow key={s.playerId} player={playerById(s.playerId)} stats={s} />
+            ))}
+          </Card>
         </View>
       )}
     </View>
@@ -167,9 +188,11 @@ const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   text: { color: colors.text },
   subtext: { color: colors.subtext },
+  centerText: { textAlign: 'center' },
   gap: { gap: spacing.lg },
   emblemRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xxl },
   emblemCol: { alignItems: 'center', gap: spacing.sm },
   compareRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.xs },
   sectionTitle: { paddingHorizontal: spacing.xs },
+  tableCard: { padding: spacing.sm, gap: 0 },
 });

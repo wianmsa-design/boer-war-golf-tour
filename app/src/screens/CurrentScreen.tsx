@@ -13,7 +13,7 @@ export default function CurrentScreen() {
 
   if (loading && !data) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} title="Active Tournament">
         <View style={styles.centered}>
           <ActivityIndicator color={colors.accent} />
         </View>
@@ -23,7 +23,7 @@ export default function CurrentScreen() {
 
   if (error && !data) {
     return (
-      <Screen onRefresh={refresh} refreshing={refreshing}>
+      <Screen onRefresh={refresh} refreshing={refreshing} title="Active Tournament">
         <Card>
           <Text style={[type.h2, styles.text]}>Couldn't load data</Text>
           <Text style={[type.body, styles.subtext]}>{error}</Text>
@@ -54,7 +54,7 @@ export default function CurrentScreen() {
   };
 
   return (
-    <Screen onRefresh={refresh} refreshing={refreshing}>
+    <Screen onRefresh={refresh} refreshing={refreshing} title="Active Tournament">
       {activeTournament ? (
         <>
           <TournamentDetail tournament={activeTournament} players={data.players} />

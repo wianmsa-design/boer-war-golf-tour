@@ -118,6 +118,17 @@ function computeOneTeamStats(ended, team) {
     else break;
   }
 
+  let bestStreak = 0;
+  let running = 0;
+  for (const t of ended) {
+    if (tournamentWinner(t) === team) {
+      running++;
+      if (running > bestStreak) bestStreak = running;
+    } else {
+      running = 0;
+    }
+  }
+
   return {
     team,
     record,
@@ -125,6 +136,7 @@ function computeOneTeamStats(ended, team) {
     pointsAgainst,
     biggestWinMargin,
     currentStreak,
+    bestStreak,
     fourBall: { pointsFor: fbFor, pointsAvailable: fbAvail, winPct: fbAvail ? (fbFor / fbAvail) * 100 : 0 },
     singles: { pointsFor: sgFor, pointsAvailable: sgAvail, winPct: sgAvail ? (sgFor / sgAvail) * 100 : 0 },
   };

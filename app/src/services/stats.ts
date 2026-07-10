@@ -136,6 +136,8 @@ export interface TeamStats {
   biggestWinMargin: number | null;
   /** Consecutive most-recent tournament wins. A tie or a loss resets it to 0. */
   currentStreak: number;
+  /** Longest winning streak anywhere in the team's history (may equal currentStreak). */
+  bestStreak: number;
   fourBall: DaySplit;
   singles: DaySplit;
 }
@@ -174,6 +176,17 @@ function computeOneTeamStats(ended: Tournament[], team: TeamId): TeamStats {
     else break;
   }
 
+  let bestStreak = 0;
+  let running = 0;
+  for (const t of ended) {
+    if (tournamentWinner(t) === team) {
+      running++;
+      if (running > bestStreak) bestStreak = running;
+    } else {
+      running = 0;
+    }
+  }
+
   return {
     team,
     record,
@@ -181,6 +194,7 @@ function computeOneTeamStats(ended: Tournament[], team: TeamId): TeamStats {
     pointsAgainst,
     biggestWinMargin,
     currentStreak,
+    bestStreak,
     fourBall: { pointsFor: fbFor, pointsAvailable: fbAvail, winPct: fbAvail ? (fbFor / fbAvail) * 100 : 0 },
     singles: { pointsFor: sgFor, pointsAvailable: sgAvail, winPct: sgAvail ? (sgFor / sgAvail) * 100 : 0 },
   };

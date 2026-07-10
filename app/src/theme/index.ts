@@ -3,7 +3,7 @@
 // Rule: team colours (boere/british) are DATA, not decoration. They may only
 // appear where the two teams are actually being distinguished: score cells,
 // standings bars, the ring on a player icon, emblems. Never as a general UI
-// color (buttons, nav, headers use the neutral palette + gold accent below).
+// color (buttons, nav, headers use the neutral palette + white accent below).
 
 export const colors = {
   bg: '#101513',
@@ -15,12 +15,12 @@ export const colors = {
   divider: 'rgba(255,255,255,0.06)',
   dimmed: 'rgba(0,0,0,0.5)',
 
-  // Interactive accent — muted antique gold. Used for buttons, links, active
+  // Interactive accent — clean white. Used for buttons, links, active
   // states, focus rings. Deliberately outside the orange/blue team space.
-  accent: '#C9A25A',
-  accentPressed: '#AD8845',
-  accentMuted: 'rgba(201,162,90,0.16)',
-  onAccent: '#1A140A',
+  accent: '#F2F4F1',
+  accentPressed: '#C7CCC9',
+  accentMuted: 'rgba(242,244,241,0.14)',
+  onAccent: '#101513',
 
   success: '#4CAF7D',
   danger: '#D9534F',

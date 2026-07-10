@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Screen from '../components/Screen';
 import Card from '../components/Card';
@@ -7,12 +7,14 @@ import Button from '../components/Button';
 import SegmentedControl from '../components/SegmentedControl';
 import PickerModal from '../components/PickerModal';
 import { useApp } from '../services/AppContext';
+import { useAnimatedTab } from '../hooks/useAnimatedTab';
 import { getTournament, isFullyDecided } from '../services/stats';
 import { MATCH_SCORE_OPTIONS } from '../services/matchplay';
 import { Day1Match, Day2Match, MatchOutcome, MatchScore, Player, playerFullName, TeamId, Tournament } from '../models';
 import { colors, radius, spacing, teamColor, type } from '../theme';
 
-type DayTab = 'Day 1 · Team' | 'Day 2 · Individual';
+const DAY_TABS = ['Day 1 · Team', 'Day 2 · Individual'] as const;
+type DayTab = typeof DAY_TABS[number];
 type ModeTab = 'Match Setup' | 'Score Entry';
 
 const endPromptKey = (tournamentId: string) => `endPrompted:${tournamentId}`;
@@ -21,6 +23,7 @@ export default function ScoreEntryScreen() {
   const { data, loading, refreshing, error, refresh, endTournament } = useApp();
   const [day, setDay] = useState<DayTab>('Day 1 · Team');
   const [mode, setMode] = useState<ModeTab>('Match Setup');
+  const { panHandlers, animStyle, setTabAnimated } = useAnimatedTab(DAY_TABS, day, setDay);
 
   const tournament = data ? getTournament(data.tournaments, data.currentTournamentId) : undefined;
   const active = tournament && tournament.status === 'active' ? tournament : undefined;
@@ -48,7 +51,7 @@ export default function ScoreEntryScreen() {
 
   if (loading && !data) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} title="Score Entry">
         <View style={styles.centered}>
           <ActivityIndicator color={colors.accent} />
         </View>
@@ -58,7 +61,7 @@ export default function ScoreEntryScreen() {
 
   if (error && !data) {
     return (
-      <Screen onRefresh={refresh} refreshing={refreshing}>
+      <Screen onRefresh={refresh} refreshing={refreshing} title="Score Entry">
         <Card>
           <Text style={[type.h2, styles.text]}>Couldn't load data</Text>
           <Text style={[type.body, styles.subtext]}>{error}</Text>
@@ -71,7 +74,7 @@ export default function ScoreEntryScreen() {
 
   if (!active) {
     return (
-      <Screen onRefresh={refresh} refreshing={refreshing}>
+      <Screen onRefresh={refresh} refreshing={refreshing} title="Score Entry">
         <Card>
           <Text style={[type.h2, styles.text]}>No active tournament</Text>
           <Text style={[type.body, styles.subtext]}>Create one in Settings → Tournament to start scoring.</Text>
@@ -92,26 +95,28 @@ export default function ScoreEntryScreen() {
   };
 
   return (
-    <Screen onRefresh={refresh} refreshing={refreshing}>
+    <Screen onRefresh={refresh} refreshing={refreshing} title="Score Entry">
       <Card>
         <Text style={[type.h2, styles.text]}>{active.name}</Text>
         <Text style={[type.small, styles.subtext]}>Players per team: {active.playersPerTeam}</Text>
       </Card>
 
-      <SegmentedControl options={['Day 1 · Team', 'Day 2 · Individual'] as const} value={day} onChange={setDay} />
+      <SegmentedControl options={DAY_TABS} value={day} onChange={setTabAnimated} />
       <SegmentedControl options={['Match Setup', 'Score Entry'] as const} value={mode} onChange={setMode} />
 
-      {day === 'Day 1 · Team' ? (
-        mode === 'Match Setup' ? (
-          <Day1Setup tournament={active} />
+      <Animated.View style={animStyle} {...panHandlers}>
+        {day === 'Day 1 · Team' ? (
+          mode === 'Match Setup' ? (
+            <Day1Setup tournament={active} />
+          ) : (
+            <Day1Scoring tournament={active} />
+          )
+        ) : mode === 'Match Setup' ? (
+          <Day2Setup tournament={active} />
         ) : (
-          <Day1Scoring tournament={active} />
-        )
-      ) : mode === 'Match Setup' ? (
-        <Day2Setup tournament={active} />
-      ) : (
-        <Day2Scoring tournament={active} />
-      )}
+          <Day2Scoring tournament={active} />
+        )}
+      </Animated.View>
 
       <Button label="End Tournament" variant="danger" onPress={handleEnd} />
     </Screen>

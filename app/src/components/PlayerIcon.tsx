@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { TeamId } from '../models';
 import { colors, teamColor } from '../theme';
 
@@ -10,13 +10,13 @@ interface Props {
   size?: number;
 }
 
-/**
- * Placeholder avatar: initials in a team-coloured ring. Swap the inner circle
- * for boere_icon_96 / british_icon_96 once those assets land — this component
- * is the seam, callers don't need to change.
- */
-export default function PlayerIcon({ firstName, surname, team, size = 28 }: Props) {
-  const initials = `${firstName[0] ?? ''}${surname[0] ?? ''}`.toUpperCase();
+const ICONS: Record<TeamId, any> = {
+  boere: require('../../assets/team/boere_icon_96.png'),
+  british: require('../../assets/team/british_icon_96.png'),
+};
+
+/** Small inline player marker: the team icon in a team-coloured ring. */
+export default function PlayerIcon({ team, size = 28 }: Props) {
   const ringColor = team ? teamColor(team) : colors.border;
   return (
     <View
@@ -25,7 +25,13 @@ export default function PlayerIcon({ firstName, surname, team, size = 28 }: Prop
         { width: size, height: size, borderRadius: size / 2, borderColor: ringColor },
       ]}
     >
-      <Text style={[styles.initials, { fontSize: size * 0.38 }]}>{initials}</Text>
+      {team && (
+        <Image
+          source={ICONS[team]}
+          style={{ width: size - 6, height: size - 6, borderRadius: (size - 6) / 2 }}
+          resizeMode="cover"
+        />
+      )}
     </View>
   );
 }
@@ -36,9 +42,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  initials: {
-    color: colors.text,
-    fontWeight: '700',
   },
 });

@@ -4,14 +4,20 @@
     {
       "name": "app-web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "app", "run", "web"],
-      "port": 8081
+      "runtimeArgs": ["--prefix", "app", "run", "web", "--", "--port", "8092"],
+      "port": 8092
     },
     {
       "name": "web-static",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["-y", "serve", "web", "-l", "5500"],
       "port": 5500
+    },
+    {
+      "name": "app-expo-go",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "app", "run", "start"],
+      "port": 8081
     }
   ]
 }

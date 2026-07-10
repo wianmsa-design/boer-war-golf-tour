@@ -1,25 +1,28 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Screen from '../components/Screen';
 import Card from '../components/Card';
 import SegmentedControl from '../components/SegmentedControl';
 import TournamentDetail from '../components/TournamentDetail';
 import { useApp } from '../services/AppContext';
+import { useAnimatedTab } from '../hooks/useAnimatedTab';
 import { computeStanding, mostRecentEndedTournament, olderEndedTournaments, tournamentWinner } from '../services/stats';
 import { colors, spacing, teamColor, type } from '../theme';
 import { Tournament } from '../models';
 
-type SubTab = 'Recent' | 'Past';
+const SUB_TABS = ['Recent', 'Past'] as const;
+type SubTab = typeof SUB_TABS[number];
 
 export default function HistoricalScreen() {
   const { data, loading, refreshing, error, refresh } = useApp();
   const [tab, setTab] = useState<SubTab>('Recent');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { panHandlers, animStyle, setTabAnimated } = useAnimatedTab(SUB_TABS, tab, setTab);
 
   if (loading && !data) {
     return (
-      <Screen scroll={false}>
+      <Screen scroll={false} title="Historical">
         <View style={styles.centered}>
           <ActivityIndicator color={colors.accent} />
         </View>
@@ -29,7 +32,7 @@ export default function HistoricalScreen() {
 
   if (error && !data) {
     return (
-      <Screen onRefresh={refresh} refreshing={refreshing}>
+      <Screen onRefresh={refresh} refreshing={refreshing} title="Historical">
         <Card>
           <Text style={[type.h2, styles.text]}>Couldn't load data</Text>
           <Text style={[type.body, styles.subtext]}>{error}</Text>
@@ -45,42 +48,44 @@ export default function HistoricalScreen() {
   const selected = selectedId ? data.tournaments.find(t => t.id === selectedId) : undefined;
 
   const handleChangeTab = (next: SubTab) => {
-    setTab(next);
     setSelectedId(null);
+    setTabAnimated(next);
   };
 
   return (
-    <Screen onRefresh={refresh} refreshing={refreshing}>
-      <SegmentedControl options={['Recent', 'Past'] as const} value={tab} onChange={handleChangeTab} />
+    <Screen onRefresh={refresh} refreshing={refreshing} title="Historical">
+      <SegmentedControl options={SUB_TABS} value={tab} onChange={handleChangeTab} />
 
-      {tab === 'Recent' ? (
-        recent ? (
-          <TournamentDetail tournament={recent} players={data.players} />
+      <Animated.View style={animStyle} {...(selected ? {} : panHandlers)}>
+        {tab === 'Recent' ? (
+          recent ? (
+            <TournamentDetail tournament={recent} players={data.players} />
+          ) : (
+            <Card>
+              <Text style={[type.h2, styles.text]}>No ended tournaments yet</Text>
+            </Card>
+          )
+        ) : selected ? (
+          <View style={styles.gap}>
+            <Pressable style={styles.backRow} onPress={() => setSelectedId(null)}>
+              <Ionicons name="chevron-back" size={18} color={colors.accent} />
+              <Text style={[type.bodyStrong, { color: colors.accent }]}>All tournaments</Text>
+            </Pressable>
+            <TournamentDetail tournament={selected} players={data.players} />
+          </View>
+        ) : older.length > 0 ? (
+          <View style={styles.gap}>
+            {older.map(t => (
+              <PastTournamentRow key={t.id} tournament={t} onPress={() => setSelectedId(t.id)} />
+            ))}
+          </View>
         ) : (
           <Card>
-            <Text style={[type.h2, styles.text]}>No ended tournaments yet</Text>
+            <Text style={[type.h2, styles.text]}>Nothing here yet</Text>
+            <Text style={[type.body, styles.subtext]}>Older tournaments will show up here once there's more than one.</Text>
           </Card>
-        )
-      ) : selected ? (
-        <View style={styles.gap}>
-          <Pressable style={styles.backRow} onPress={() => setSelectedId(null)}>
-            <Ionicons name="chevron-back" size={18} color={colors.accent} />
-            <Text style={[type.bodyStrong, { color: colors.accent }]}>All tournaments</Text>
-          </Pressable>
-          <TournamentDetail tournament={selected} players={data.players} />
-        </View>
-      ) : older.length > 0 ? (
-        <View style={styles.gap}>
-          {older.map(t => (
-            <PastTournamentRow key={t.id} tournament={t} onPress={() => setSelectedId(t.id)} />
-          ))}
-        </View>
-      ) : (
-        <Card>
-          <Text style={[type.h2, styles.text]}>Nothing here yet</Text>
-          <Text style={[type.body, styles.subtext]}>Older tournaments will show up here once there's more than one.</Text>
-        </Card>
-      )}
+        )}
+      </Animated.View>
     </Screen>
   );
 }

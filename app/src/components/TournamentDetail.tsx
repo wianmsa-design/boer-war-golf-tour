@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Day1Match, Day2Match, formatHandicap, Player, playerFullName, Tournament } from '../models';
+import { Day1Match, Day2Match, formatHandicap, Player, Tournament } from '../models';
 import { computeStanding, playerPointsInTournament } from '../services/stats';
-import { colors, radius, spacing, teamColor, type } from '../theme';
+import { colors, spacing, teamColor, type } from '../theme';
 import Card from './Card';
 import PlayerIcon from './PlayerIcon';
 
@@ -11,15 +11,15 @@ interface Props {
   players: Player[];
 }
 
-function nameFor(players: Player[], id: string | null): string {
+function firstNameFor(players: Player[], id: string | null): string {
   if (!id) return 'TBC';
   const p = players.find(pl => pl.id === id);
-  return p ? playerFullName(p) : 'Unknown player';
+  return p ? p.firstName : 'Unknown';
 }
 
 function outcomeLabel(m: Day1Match | Day2Match): string {
   if (m.result === null) return 'Not yet played';
-  if (m.result === 'halved') return `Halved${m.score ? '' : ''}`;
+  if (m.result === 'halved') return 'Halved';
   const winner = m.result === 'boere' ? 'Boere' : 'British';
   return m.score ? `${winner} win ${m.score}` : `${winner} win`;
 }
@@ -29,16 +29,18 @@ export default function TournamentDetail({ tournament, players }: Props) {
   const sameCourse = tournament.courses.day1 === tournament.courses.day2;
   const tied = standing.boere === standing.british && tournament.status === 'ended';
 
-  const rosterIds = [
-    ...tournament.rosters.boere.map(r => r.playerId),
-    ...tournament.rosters.british.map(r => r.playerId),
-  ];
+  const leaderboard = [
+    ...tournament.rosters.boere.map(r => ({ ...r, team: 'boere' as const })),
+    ...tournament.rosters.british.map(r => ({ ...r, team: 'british' as const })),
+  ]
+    .map(entry => ({ entry, points: playerPointsInTournament(tournament, entry.playerId) }))
+    .sort((a, b) => b.points - a.points);
 
   return (
     <View style={styles.container}>
       <Card>
-        <Text style={[type.h1, styles.text]}>{tournament.name}</Text>
-        <Text style={[type.small, styles.subtext]}>
+        <Text style={[type.h1, styles.text, styles.center]}>{tournament.name}</Text>
+        <Text style={[type.small, styles.subtext, styles.center]}>
           {sameCourse ? tournament.courses.day1 : `Day 1: ${tournament.courses.day1}  ·  Day 2: ${tournament.courses.day2}`}
         </Text>
         <View style={styles.standingRow}>
@@ -57,8 +59,8 @@ export default function TournamentDetail({ tournament, players }: Props) {
           <MatchRow
             key={m.match}
             label={`Match ${m.match}`}
-            boere={m.boere.map(id => nameFor(players, id)).join(' & ')}
-            british={m.british.map(id => nameFor(players, id)).join(' & ')}
+            boere={m.boere.map(id => firstNameFor(players, id)).join(' & ')}
+            british={m.british.map(id => firstNameFor(players, id)).join(' & ')}
             outcome={outcomeLabel(m)}
             decided={m.result !== null}
           />
@@ -70,8 +72,8 @@ export default function TournamentDetail({ tournament, players }: Props) {
           <MatchRow
             key={m.match}
             label={`Match ${m.match}`}
-            boere={nameFor(players, m.boere)}
-            british={nameFor(players, m.british)}
+            boere={firstNameFor(players, m.boere)}
+            british={firstNameFor(players, m.british)}
             outcome={outcomeLabel(m)}
             decided={m.result !== null}
           />
@@ -79,21 +81,27 @@ export default function TournamentDetail({ tournament, players }: Props) {
       </Section>
 
       <Section title="Players">
-        {rosterIds.map(id => {
-          const player = players.find(p => p.id === id);
+        <View style={styles.leaderboardHeader}>
+          <Text style={[type.caption, styles.subtext, styles.lbPos]}>#</Text>
+          <View style={styles.lbIcon} />
+          <Text style={[type.caption, styles.subtext, styles.lbName]}>PLAYER</Text>
+          <Text style={[type.caption, styles.subtext, styles.lbHcp]}>HCP</Text>
+          <Text style={[type.caption, styles.subtext, styles.lbPts]}>PTS</Text>
+        </View>
+        {leaderboard.map(({ entry, points }, i) => {
+          const player = players.find(p => p.id === entry.playerId);
           if (!player) return null;
-          const onBoere = tournament.rosters.boere.some(r => r.playerId === id);
-          const team = onBoere ? 'boere' : 'british';
-          const rosterEntry = (onBoere ? tournament.rosters.boere : tournament.rosters.british).find(r => r.playerId === id);
-          const points = playerPointsInTournament(tournament, id);
           return (
-            <View key={id} style={styles.playerRow}>
-              <PlayerIcon firstName={player.firstName} surname={player.surname} team={team} size={26} />
-              <Text style={[type.body, styles.text, styles.playerName]}>{playerFullName(player)}</Text>
-              {rosterEntry?.handicap !== null && rosterEntry?.handicap !== undefined && (
-                <Text style={[type.small, styles.subtext]}>{formatHandicap(rosterEntry.handicap)}</Text>
-              )}
-              <Text style={[type.smallStrong, { color: teamColor(team) }]}>{points} pts</Text>
+            <View key={entry.playerId} style={styles.leaderboardRow}>
+              <Text style={[type.small, styles.subtext, styles.lbPos]}>{i + 1}</Text>
+              <View style={styles.lbIcon}>
+                <PlayerIcon firstName={player.firstName} surname={player.surname} team={entry.team} size={26} />
+              </View>
+              <Text style={[type.body, styles.text, styles.lbName]} numberOfLines={1}>{player.firstName}</Text>
+              <Text style={[type.small, styles.subtext, styles.lbHcp]}>
+                {entry.handicap !== null ? formatHandicap(entry.handicap) : '—'}
+              </Text>
+              <Text style={[type.smallStrong, { color: teamColor(entry.team) }, styles.lbPts]}>{points}</Text>
             </View>
           );
         })}
@@ -126,13 +134,13 @@ function MatchRow({
 }) {
   return (
     <View style={styles.matchRow}>
-      <Text style={[type.caption, styles.subtext]}>{label}</Text>
+      <Text style={[type.caption, styles.subtext, styles.center]}>{label}</Text>
       <View style={styles.matchPlayers}>
         <Text style={[type.body, { color: teamColor('boere') }]} numberOfLines={1}>{boere}</Text>
         <Text style={[type.small, styles.subtext]}>vs</Text>
         <Text style={[type.body, { color: teamColor('british') }]} numberOfLines={1}>{british}</Text>
       </View>
-      <Text style={[type.small, decided ? styles.text : styles.subtext]}>{outcome}</Text>
+      <Text style={[type.small, decided ? styles.text : styles.subtext, styles.center]}>{outcome}</Text>
     </View>
   );
 }
@@ -141,6 +149,7 @@ const styles = StyleSheet.create({
   container: { gap: spacing.lg },
   text: { color: colors.text },
   subtext: { color: colors.subtext },
+  center: { textAlign: 'center' },
   standingRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -154,23 +163,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xxxl,
   },
   section: { gap: spacing.sm },
-  sectionTitle: { paddingHorizontal: spacing.xs },
+  sectionTitle: { paddingHorizontal: spacing.xs, textAlign: 'center' },
   sectionCard: { gap: spacing.md },
   matchRow: {
     gap: spacing.xs,
+    alignItems: 'center',
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.divider,
   },
-  matchPlayers: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  playerRow: {
+  matchPlayers: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  leaderboardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  leaderboardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.divider,
   },
-  playerName: { flex: 1 },
-  radius: { borderRadius: radius.md },
+  lbPos: { width: 24, textAlign: 'center' },
+  lbIcon: { width: 32, alignItems: 'center' },
+  lbName: { flex: 1 },
+  lbHcp: { width: 40, textAlign: 'center' },
+  lbPts: { width: 36, textAlign: 'right' },
 });
