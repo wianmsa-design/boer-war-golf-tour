@@ -110,11 +110,10 @@ const styles = StyleSheet.create({
   colChevron: { width: 16, alignItems: 'center' },
   detail: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingHorizontal: spacing.xs,
     paddingBottom: spacing.md,
   },
-  detailStat: { alignItems: 'center', gap: 1 },
+  detailStat: { flex: 1, alignItems: 'center', gap: 1 },
   detailLabel: { fontSize: 9, fontWeight: '600', letterSpacing: 0.3, color: colors.subtext },
   detailValue: { fontSize: 12, fontWeight: '700', color: colors.text },
 });
