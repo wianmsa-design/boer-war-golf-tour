@@ -9,7 +9,7 @@ import SegmentedControl from '../components/SegmentedControl';
 import PickerModal from '../components/PickerModal';
 import { useApp } from '../services/AppContext';
 import { useAnimatedTab } from '../hooks/useAnimatedTab';
-import { getTournament, isFullyDecided } from '../services/stats';
+import { getTournament, isDay1FullySetup, isDay2FullySetup, isFullyDecided } from '../services/stats';
 import { MATCH_SCORE_OPTIONS } from '../services/matchplay';
 import { Day1Match, Day2Match, MatchOutcome, MatchScore, Player, playerFullName, TeamId, Tournament } from '../models';
 import { colors, radius, spacing, type } from '../theme';
@@ -81,6 +81,12 @@ export default function ScoreEntryScreen() {
     );
   }
 
+  const handleDayChange = (newDay: DayTab) => {
+    const fullySetup = newDay === 'Day 1 · Team' ? isDay1FullySetup(active) : isDay2FullySetup(active);
+    if (!fullySetup) setMode('Match Setup');
+    setTabAnimated(newDay);
+  };
+
   const handleEnd = () => {
     const incomplete = !fullyDecided;
     Alert(
@@ -95,11 +101,11 @@ export default function ScoreEntryScreen() {
   return (
     <Screen onRefresh={refresh} refreshing={refreshing} title="Score Entry">
       <Card>
-        <Text style={[type.h2, styles.text]}>{active.name}</Text>
-        <Text style={[type.small, styles.subtext]}>Players per team: {active.playersPerTeam}</Text>
+        <Text style={[type.h2, styles.text, styles.center]}>{active.name}</Text>
+        <Text style={[type.small, styles.subtext, styles.center]}>Players per team: {active.playersPerTeam}</Text>
       </Card>
 
-      <SegmentedControl options={DAY_TABS} value={day} onChange={setTabAnimated} />
+      <SegmentedControl options={DAY_TABS} value={day} onChange={handleDayChange} />
       <SegmentedControl options={['Match Setup', 'Score Entry'] as const} value={mode} onChange={setMode} />
 
       <Animated.View style={animStyle} {...panHandlers}>
@@ -133,7 +139,8 @@ function Alert(title: string, message: string, onConfirm: () => void) {
 
 function playerName(players: Player[], id: string | null): string {
   if (!id) return 'Unassigned';
-  return players.find(p => p.id === id) ? playerFullName(players.find(p => p.id === id)!) : 'Unknown';
+  const p = players.find(pl => pl.id === id);
+  return p ? p.firstName : 'Unknown';
 }
 
 // ---------------------------------------------------------------------------
@@ -157,7 +164,7 @@ function Day1Setup({ tournament }: { tournament: Tournament }) {
     <View style={styles.gap}>
       {tournament.matches.day1.map((m, i) => (
         <Card key={m.match} style={styles.gap}>
-          <Text style={[type.caption, styles.subtext]}>MATCH {m.match}</Text>
+          <Text style={[type.caption, styles.subtext, styles.center]}>MATCH {m.match}</Text>
           <View style={styles.setupRow}>
             <SetupSlotPair
               side="boere"
@@ -239,7 +246,7 @@ function Day2Setup({ tournament }: { tournament: Tournament }) {
     <View style={styles.gap}>
       {tournament.matches.day2.map((m, i) => (
         <Card key={m.match} style={styles.gap}>
-          <Text style={[type.caption, styles.subtext]}>MATCH {m.match}</Text>
+          <Text style={[type.caption, styles.subtext, styles.center]}>MATCH {m.match}</Text>
           <View style={styles.setupRow}>
             <Pressable style={[styles.slot, styles.slotWide]} onPress={() => setPicker({ matchIndex: i, side: 'boere' })}>
               <Text style={[type.small, m.boere ? styles.text : styles.subtext]}>{playerName(data.players, m.boere)}</Text>
@@ -393,7 +400,7 @@ function MatchScoreCard({
 }) {
   return (
     <Card style={styles.gap}>
-      <Text style={[type.caption, styles.subtext]}>{label.toUpperCase()}</Text>
+      <Text style={[type.caption, styles.subtext, styles.center]}>{label.toUpperCase()}</Text>
       {!ready ? (
         <Text style={[type.small, styles.subtext]}>Assign both players in Match Setup first.</Text>
       ) : (
@@ -417,6 +424,7 @@ const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   text: { color: colors.text },
   subtext: { color: colors.subtext },
+  center: { textAlign: 'center' },
   gap: { gap: spacing.md },
   setupRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   slotPair: { flex: 1, gap: spacing.xs },
@@ -449,5 +457,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   scoreChipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
-  scoringNames: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  scoringNames: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
 });

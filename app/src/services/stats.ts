@@ -28,6 +28,14 @@ export function isFullyDecided(tournament: Tournament): boolean {
   return [...tournament.matches.day1, ...tournament.matches.day2].every(m => m.result !== null);
 }
 
+export function isDay1FullySetup(tournament: Tournament): boolean {
+  return tournament.matches.day1.every(m => m.boere.every(Boolean) && m.british.every(Boolean));
+}
+
+export function isDay2FullySetup(tournament: Tournament): boolean {
+  return tournament.matches.day2.every(m => !!m.boere && !!m.british);
+}
+
 export function decidedMatchCount(tournament: Tournament): number {
   return [...tournament.matches.day1, ...tournament.matches.day2].filter(m => m.result !== null).length;
 }
