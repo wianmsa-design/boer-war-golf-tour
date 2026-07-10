@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { Player } from '../models';
 import { PlayerRecord, PlayerStats } from '../services/stats';
 import { colors, spacing, type } from '../theme';
@@ -26,7 +25,6 @@ export function PlayerTableHeader() {
       <Text style={[type.caption, styles.subtext, styles.colName]}>PLAYER</Text>
       <Text style={[type.caption, styles.subtext, styles.colRecord]}>W-L-D</Text>
       <Text style={[type.caption, styles.subtext, styles.colPct]}>WIN%</Text>
-      <View style={styles.colChevron} />
     </View>
   );
 }
@@ -39,13 +37,12 @@ interface Props {
 }
 
 export default function PlayerStatsRow({ player, stats, rankLabel, displayWinPct }: Props) {
-  const [expanded, setExpanded] = useState(false);
   const team = stats.mostRecentTeam;
   const pct = displayWinPct ?? Math.round(stats.winPct * 10) / 10;
   const record = combinedRecord(stats);
 
   return (
-    <Pressable onPress={() => setExpanded(e => !e)} style={styles.wrap}>
+    <View style={styles.wrap}>
       <View style={styles.row}>
         <Text style={[type.smallStrong, styles.colPos, { color: colors.accent }]}>{rankLabel ?? '—'}</Text>
         <View style={styles.colIcon}>
@@ -54,22 +51,17 @@ export default function PlayerStatsRow({ player, stats, rankLabel, displayWinPct
         <Text style={[type.body, styles.text, styles.colName]} numberOfLines={1}>{player.firstName}</Text>
         <Text style={[type.small, styles.text, styles.colRecord]}>{fmtRecord(record)}</Text>
         <Text style={[type.smallStrong, { color: colors.accent }, styles.colPct]}>{pct.toFixed(1)}%</Text>
-        <View style={styles.colChevron}>
-          <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={colors.subtext} />
-        </View>
       </View>
 
-      {expanded && (
-        <View style={styles.detail}>
-          <Stat label="TRN" value={`${stats.tournamentsPlayed}`} />
-          <Stat label="TEAM" value={fmtRecord(stats.teamResults)} />
-          <Stat label="FB" value={fmtRecord(stats.fourBall)} />
-          <Stat label="SGL" value={fmtRecord(stats.singles)} />
-          <Stat label="PF" value={`${stats.pointsFor}`} />
-          <Stat label="PA" value={`${stats.pointsAgainst}`} />
-        </View>
-      )}
-    </Pressable>
+      <View style={styles.detail}>
+        <Stat label="TRN" value={`${stats.tournamentsPlayed}`} />
+        <Stat label="TEAM" value={fmtRecord(stats.teamResults)} />
+        <Stat label="Four-Ball" value={fmtRecord(stats.fourBall)} />
+        <Stat label="Singles" value={fmtRecord(stats.singles)} />
+        <Stat label="PF" value={`${stats.pointsFor}`} />
+        <Stat label="PA" value={`${stats.pointsAgainst}`} />
+      </View>
+    </View>
   );
 }
 
@@ -107,7 +99,6 @@ const styles = StyleSheet.create({
   colName: { flex: 1 },
   colRecord: { width: 56, textAlign: 'center' },
   colPct: { width: 52, textAlign: 'right' },
-  colChevron: { width: 16, alignItems: 'center' },
   detail: {
     flexDirection: 'row',
     justifyContent: 'space-between',

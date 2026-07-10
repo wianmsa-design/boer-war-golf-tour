@@ -1,10 +1,11 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Day1Match, Day2Match, formatHandicap, Player, Tournament } from '../models';
+import { Day1Match, Day2Match, formatHandicap, Player, TeamId, Tournament } from '../models';
 import { computeStanding, playerPointsInTournament } from '../services/stats';
-import { colors, spacing, type } from '../theme';
+import { colors, spacing, teamLabel, type } from '../theme';
 import Card from './Card';
 import PlayerIcon from './PlayerIcon';
+import TeamEmblem from './TeamEmblem';
 
 interface Props {
   tournament: Tournament;
@@ -20,7 +21,7 @@ function firstNameFor(players: Player[], id: string | null): string {
 function outcomeLabel(m: Day1Match | Day2Match): string {
   if (m.result === null) return 'Not yet played';
   if (m.result === 'halved') return 'Halved';
-  const winner = m.result === 'boere' ? 'Boere' : 'British';
+  const winner = teamLabel(m.result);
   return m.score ? `${winner} win ${m.score}` : `${winner} win`;
 }
 
@@ -28,6 +29,7 @@ export default function TournamentDetail({ tournament, players }: Props) {
   const standing = tournament.status === 'ended' ? tournament.result : computeStanding(tournament);
   const sameCourse = tournament.courses.day1 === tournament.courses.day2;
   const tied = standing.boere === standing.british && tournament.status === 'ended';
+  const winnerSide: TeamId | null = standing.boere > standing.british ? 'boere' : standing.british > standing.boere ? 'british' : null;
 
   const leaderboard = [
     ...tournament.rosters.boere.map(r => ({ ...r, team: 'boere' as const })),
@@ -45,13 +47,19 @@ export default function TournamentDetail({ tournament, players }: Props) {
         </Text>
         <View style={styles.standingRow}>
           <View style={styles.standingCol}>
+            <TeamEmblem team="boere" size={44} />
             <Text style={[type.display, styles.text]}>{standing.boere}</Text>
-            <Text style={[type.caption, styles.subtext]}>BOERE</Text>
+            <Text style={[type.caption, winnerSide === 'boere' ? { color: colors.accent } : styles.subtext, styles.center]}>
+              {teamLabel('boere').toUpperCase()}
+            </Text>
           </View>
           <Text style={[type.h2, styles.subtext]}>{tied ? 'Tied' : 'vs'}</Text>
           <View style={styles.standingCol}>
+            <TeamEmblem team="british" size={44} />
             <Text style={[type.display, styles.text]}>{standing.british}</Text>
-            <Text style={[type.caption, styles.subtext]}>BRITISH</Text>
+            <Text style={[type.caption, winnerSide === 'british' ? { color: colors.accent } : styles.subtext, styles.center]}>
+              {teamLabel('british').toUpperCase()}
+            </Text>
           </View>
         </View>
       </Card>
@@ -84,11 +92,11 @@ export default function TournamentDetail({ tournament, players }: Props) {
 
       <Section title="Players">
         <View style={styles.leaderboardHeader}>
-          <Text style={[type.caption, styles.subtext, styles.lbPos]}>#</Text>
+          <Text style={[type.caption, styles.subtext, styles.lbPos, styles.noLetterSpacing]}>#</Text>
           <View style={styles.lbIcon} />
           <Text style={[type.caption, styles.subtext, styles.lbName]}>PLAYER</Text>
-          <Text style={[type.caption, styles.subtext, styles.lbHcp]}>HCP</Text>
-          <Text style={[type.caption, styles.subtext, styles.lbPts]}>PTS</Text>
+          <Text style={[type.caption, styles.subtext, styles.lbHcp, styles.noLetterSpacing]}>HCP</Text>
+          <Text style={[type.caption, styles.subtext, styles.lbPts, styles.noLetterSpacing]}>PTS</Text>
         </View>
         {leaderboard.map(({ entry, points }, i) => {
           const player = players.find(p => p.id === entry.playerId);
@@ -152,6 +160,7 @@ const styles = StyleSheet.create({
   text: { color: colors.text },
   subtext: { color: colors.subtext },
   center: { textAlign: 'center' },
+  noLetterSpacing: { letterSpacing: 0 },
   standingRow: {
     flexDirection: 'row',
     alignItems: 'center',

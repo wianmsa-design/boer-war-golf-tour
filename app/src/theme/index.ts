@@ -15,12 +15,12 @@ export const colors = {
   divider: 'rgba(255,255,255,0.06)',
   dimmed: 'rgba(0,0,0,0.5)',
 
-  // Interactive accent — red-orange. Used generously: buttons, active
+  // Interactive accent — gold. Used generously: buttons, active
   // states, borders, focus rings, headline stat values.
-  accent: '#FF5533',
-  accentPressed: '#E0432A',
-  accentMuted: 'rgba(255,85,51,0.16)',
-  onAccent: '#1A0D08',
+  accent: '#E5B93F',
+  accentPressed: '#C79A2E',
+  accentMuted: 'rgba(229,185,63,0.16)',
+  onAccent: '#1A1206',
 
   success: '#4CAF7D',
   danger: '#D9534F',
@@ -57,5 +57,5 @@ export const type = {
 } as const;
 
 export function teamLabel(team: 'boere' | 'british'): string {
-  return team === 'boere' ? 'Boere' : 'British';
+  return team === 'boere' ? 'Boere Republic' : 'British Empire';
 }

@@ -29,7 +29,7 @@ export default function Screen({ children, title, onRefresh, refreshing, scroll 
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         {titleEl}
-        <View style={[styles.content, contentStyle]}>{children}</View>
+        <View style={[styles.content, styles.flexContent, contentStyle]}>{children}</View>
       </SafeAreaView>
     );
   }
@@ -52,4 +52,5 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   title: { ...type.h1, color: colors.text, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.sm },
   content: { padding: spacing.lg, paddingBottom: spacing.huge, gap: spacing.lg },
+  flexContent: { flex: 1 },
 });

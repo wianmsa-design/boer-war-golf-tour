@@ -7,9 +7,10 @@ import SegmentedControl from '../components/SegmentedControl';
 import TournamentDetail from '../components/TournamentDetail';
 import { useApp } from '../services/AppContext';
 import { useAnimatedTab } from '../hooks/useAnimatedTab';
+import TeamEmblem from '../components/TeamEmblem';
 import { computeStanding, mostRecentEndedTournament, olderEndedTournaments } from '../services/stats';
 import { colors, spacing, type } from '../theme';
-import { Tournament } from '../models';
+import { TeamId, Tournament } from '../models';
 
 const SUB_TABS = ['Recent', 'Past'] as const;
 type SubTab = typeof SUB_TABS[number];
@@ -92,6 +93,7 @@ export default function HistoricalScreen() {
 
 function PastTournamentRow({ tournament, onPress }: { tournament: Tournament; onPress: () => void }) {
   const standing = useMemo(() => computeStanding(tournament), [tournament]);
+  const winner: TeamId | null = standing.boere > standing.british ? 'boere' : standing.british > standing.boere ? 'british' : null;
   return (
     <Pressable onPress={onPress}>
       <Card style={styles.row}>
@@ -105,13 +107,15 @@ function PastTournamentRow({ tournament, onPress }: { tournament: Tournament; on
         </View>
         <View style={styles.rowRight}>
           <View style={styles.scoreCol}>
+            <TeamEmblem team="boere" size={20} />
             <Text style={[type.bodyStrong, styles.text]}>{standing.boere}</Text>
-            <Text style={[type.caption, styles.subtext]}>BOERE</Text>
+            <Text style={[type.caption, winner === 'boere' ? { color: colors.accent } : styles.subtext]}>BOERE</Text>
           </View>
           <Text style={[type.small, styles.subtext]}>–</Text>
           <View style={styles.scoreCol}>
+            <TeamEmblem team="british" size={20} />
             <Text style={[type.bodyStrong, styles.text]}>{standing.british}</Text>
-            <Text style={[type.caption, styles.subtext]}>BRIT</Text>
+            <Text style={[type.caption, winner === 'british' ? { color: colors.accent } : styles.subtext]}>BRIT</Text>
           </View>
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.accent} />

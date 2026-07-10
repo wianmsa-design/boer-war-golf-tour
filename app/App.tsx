@@ -46,9 +46,9 @@ function AppNav() {
             },
           })}
         >
+          <Tab.Screen name="Stats" component={StatsScreen} />
           <Tab.Screen name="Score Entry" component={ScoreEntryScreen} />
           <Tab.Screen name="Active Tournament" component={CurrentScreen} />
-          <Tab.Screen name="Stats" component={StatsScreen} />
           <Tab.Screen name="Historical" component={HistoricalScreen} />
           <Tab.Screen name="Settings" component={SettingsScreen} />
         </Tab.Navigator>
