@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import Screen from '../components/Screen';
 import Card from '../components/Card';
 import Button from '../components/Button';
+import EmptyState from '../components/EmptyState';
 import TournamentDetail from '../components/TournamentDetail';
 import { useApp } from '../services/AppContext';
 import { getTournament, isFullyDecided } from '../services/stats';
@@ -38,8 +39,15 @@ export default function CurrentScreen() {
   const tournament = getTournament(data.tournaments, data.currentTournamentId);
   const activeTournament = tournament && tournament.status === 'active' ? tournament : undefined;
 
+  if (!activeTournament) {
+    return (
+      <Screen scroll={false} title="Active Tournament">
+        <EmptyState title="No active tournament" message="Please create a tournament to see stats." />
+      </Screen>
+    );
+  }
+
   const handleEnd = () => {
-    if (!activeTournament) return;
     const incomplete = !isFullyDecided(activeTournament);
     Alert.alert(
       incomplete ? 'End tournament early?' : 'End tournament?',
@@ -55,19 +63,8 @@ export default function CurrentScreen() {
 
   return (
     <Screen onRefresh={refresh} refreshing={refreshing} title="Active Tournament">
-      {activeTournament ? (
-        <>
-          <TournamentDetail tournament={activeTournament} players={data.players} />
-          <Button label="End Tournament" variant="danger" onPress={handleEnd} />
-        </>
-      ) : (
-        <Card>
-          <Text style={[type.h2, styles.text]}>No active tournament</Text>
-          <Text style={[type.body, styles.subtext]}>
-            Create the next tournament from Settings to start scoring.
-          </Text>
-        </Card>
-      )}
+      <TournamentDetail tournament={activeTournament} players={data.players} />
+      <Button label="End Tournament" variant="danger" onPress={handleEnd} />
     </Screen>
   );
 }

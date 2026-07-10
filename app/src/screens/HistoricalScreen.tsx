@@ -7,8 +7,8 @@ import SegmentedControl from '../components/SegmentedControl';
 import TournamentDetail from '../components/TournamentDetail';
 import { useApp } from '../services/AppContext';
 import { useAnimatedTab } from '../hooks/useAnimatedTab';
-import { computeStanding, mostRecentEndedTournament, olderEndedTournaments, tournamentWinner } from '../services/stats';
-import { colors, spacing, teamColor, type } from '../theme';
+import { computeStanding, mostRecentEndedTournament, olderEndedTournaments } from '../services/stats';
+import { colors, spacing, type } from '../theme';
 import { Tournament } from '../models';
 
 const SUB_TABS = ['Recent', 'Past'] as const;
@@ -92,7 +92,6 @@ export default function HistoricalScreen() {
 
 function PastTournamentRow({ tournament, onPress }: { tournament: Tournament; onPress: () => void }) {
   const standing = useMemo(() => computeStanding(tournament), [tournament]);
-  const winner = useMemo(() => tournamentWinner(tournament), [tournament]);
   return (
     <Pressable onPress={onPress}>
       <Card style={styles.row}>
@@ -105,9 +104,15 @@ function PastTournamentRow({ tournament, onPress }: { tournament: Tournament; on
           </Text>
         </View>
         <View style={styles.rowRight}>
-          <Text style={[type.bodyStrong, { color: teamColor('boere') }]}>{standing.boere}</Text>
+          <View style={styles.scoreCol}>
+            <Text style={[type.bodyStrong, styles.text]}>{standing.boere}</Text>
+            <Text style={[type.caption, styles.subtext]}>BOERE</Text>
+          </View>
           <Text style={[type.small, styles.subtext]}>–</Text>
-          <Text style={[type.bodyStrong, { color: teamColor('british') }]}>{standing.british}</Text>
+          <View style={styles.scoreCol}>
+            <Text style={[type.bodyStrong, styles.text]}>{standing.british}</Text>
+            <Text style={[type.caption, styles.subtext]}>BRIT</Text>
+          </View>
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.subtext} />
       </Card>
@@ -124,4 +129,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   rowLeft: { flex: 1, gap: 2 },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  scoreCol: { alignItems: 'center', gap: 1 },
 });

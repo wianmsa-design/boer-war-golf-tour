@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Screen from '../components/Screen';
 import Card from '../components/Card';
 import Button from '../components/Button';
+import EmptyState from '../components/EmptyState';
 import SegmentedControl from '../components/SegmentedControl';
 import PickerModal from '../components/PickerModal';
 import { useApp } from '../services/AppContext';
@@ -11,7 +12,7 @@ import { useAnimatedTab } from '../hooks/useAnimatedTab';
 import { getTournament, isFullyDecided } from '../services/stats';
 import { MATCH_SCORE_OPTIONS } from '../services/matchplay';
 import { Day1Match, Day2Match, MatchOutcome, MatchScore, Player, playerFullName, TeamId, Tournament } from '../models';
-import { colors, radius, spacing, teamColor, type } from '../theme';
+import { colors, radius, spacing, type } from '../theme';
 
 const DAY_TABS = ['Day 1 · Team', 'Day 2 · Individual'] as const;
 type DayTab = typeof DAY_TABS[number];
@@ -74,11 +75,8 @@ export default function ScoreEntryScreen() {
 
   if (!active) {
     return (
-      <Screen onRefresh={refresh} refreshing={refreshing} title="Score Entry">
-        <Card>
-          <Text style={[type.h2, styles.text]}>No active tournament</Text>
-          <Text style={[type.body, styles.subtext]}>Create one in Settings → Tournament to start scoring.</Text>
-        </Card>
+      <Screen scroll={false} title="Score Entry">
+        <EmptyState title="No active tournament" message="Please create a tournament to enter scores." />
       </Screen>
     );
   }
@@ -214,7 +212,7 @@ function SetupSlotPair({
   return (
     <View style={styles.slotPair}>
       {([0, 1] as const).map(slot => (
-        <Pressable key={slot} style={[styles.slot, { borderColor: teamColor(side) }]} onPress={() => onPress(slot)}>
+        <Pressable key={slot} style={styles.slot} onPress={() => onPress(slot)}>
           <Text style={[type.small, values[slot] ? styles.text : styles.subtext]} numberOfLines={1}>
             {playerName(players, values[slot])}
           </Text>
@@ -243,11 +241,11 @@ function Day2Setup({ tournament }: { tournament: Tournament }) {
         <Card key={m.match} style={styles.gap}>
           <Text style={[type.caption, styles.subtext]}>MATCH {m.match}</Text>
           <View style={styles.setupRow}>
-            <Pressable style={[styles.slot, styles.slotWide, { borderColor: teamColor('boere') }]} onPress={() => setPicker({ matchIndex: i, side: 'boere' })}>
+            <Pressable style={[styles.slot, styles.slotWide]} onPress={() => setPicker({ matchIndex: i, side: 'boere' })}>
               <Text style={[type.small, m.boere ? styles.text : styles.subtext]}>{playerName(data.players, m.boere)}</Text>
             </Pressable>
             <Text style={[type.small, styles.subtext]}>vs</Text>
-            <Pressable style={[styles.slot, styles.slotWide, { borderColor: teamColor('british') }]} onPress={() => setPicker({ matchIndex: i, side: 'british' })}>
+            <Pressable style={[styles.slot, styles.slotWide]} onPress={() => setPicker({ matchIndex: i, side: 'british' })}>
               <Text style={[type.small, m.british ? styles.text : styles.subtext]}>{playerName(data.players, m.british)}</Text>
             </Pressable>
           </View>
@@ -289,10 +287,10 @@ function ResultPicker({
   onChange: (r: MatchOutcome) => void;
   disabled?: boolean;
 }) {
-  const options: { key: MatchOutcome; label: string; color: string }[] = [
-    { key: 'boere', label: 'Boere', color: teamColor('boere') },
-    { key: 'halved', label: 'Halved', color: colors.accent },
-    { key: 'british', label: 'British', color: teamColor('british') },
+  const options: { key: MatchOutcome; label: string }[] = [
+    { key: 'boere', label: 'Boere' },
+    { key: 'halved', label: 'Halved' },
+    { key: 'british', label: 'British' },
   ];
   return (
     <View style={styles.resultRow}>
@@ -305,12 +303,11 @@ function ResultPicker({
             onPress={() => onChange(opt.key)}
             style={[
               styles.resultBtn,
-              { borderColor: opt.color },
-              active && { backgroundColor: opt.color },
+              active && styles.resultBtnActive,
               disabled && styles.resultBtnDisabled,
             ]}
           >
-            <Text style={[type.smallStrong, { color: active ? colors.onAccent : opt.color }]}>{opt.label}</Text>
+            <Text style={[type.smallStrong, active ? { color: colors.onAccent } : styles.text]}>{opt.label}</Text>
           </Pressable>
         );
       })}
@@ -402,9 +399,9 @@ function MatchScoreCard({
       ) : (
         <>
           <View style={styles.scoringNames}>
-            <Text style={[type.body, { color: teamColor('boere') }]} numberOfLines={1}>{boereLabel}</Text>
+            <Text style={[type.body, styles.text]} numberOfLines={1}>{boereLabel}</Text>
             <Text style={[type.small, styles.subtext]}>vs</Text>
-            <Text style={[type.body, { color: teamColor('british') }]} numberOfLines={1}>{britishLabel}</Text>
+            <Text style={[type.body, styles.text]} numberOfLines={1}>{britishLabel}</Text>
           </View>
           <ResultPicker result={match.result} onChange={r => onSetResult(r, r === 'halved' ? null : match.score)} />
           {match.result && match.result !== 'halved' && (
@@ -425,6 +422,7 @@ const styles = StyleSheet.create({
   slotPair: { flex: 1, gap: spacing.xs },
   slot: {
     borderWidth: 1.5,
+    borderColor: colors.border,
     borderRadius: radius.sm,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
@@ -435,10 +433,12 @@ const styles = StyleSheet.create({
   resultBtn: {
     flex: 1,
     borderWidth: 1.5,
+    borderColor: colors.border,
     borderRadius: radius.sm,
     paddingVertical: spacing.sm,
     alignItems: 'center',
   },
+  resultBtnActive: { backgroundColor: colors.accent, borderColor: colors.accent },
   resultBtnDisabled: { opacity: 0.4 },
   scoreRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   scoreChip: {

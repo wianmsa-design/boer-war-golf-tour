@@ -8,7 +8,7 @@ import PlayerStatsRow, { PlayerTableHeader } from '../components/PlayerStatsTabl
 import { useApp } from '../services/AppContext';
 import { useAnimatedTab } from '../hooks/useAnimatedTab';
 import { computeAllPlayerStats, computeTeamStats, rankPlayers, TeamStats } from '../services/stats';
-import { colors, spacing, teamColor, teamLabel, type } from '../theme';
+import { colors, spacing, teamLabel, type } from '../theme';
 
 const SUB_TABS = ['Teams', 'Players'] as const;
 type SubTab = typeof SUB_TABS[number];
@@ -64,88 +64,96 @@ export default function StatsScreen() {
   );
 }
 
+/** Two centered columns with a vertical divider — every Teams-tab card uses this so values line up under the emblems above. */
+function SplitRow({ left, right }: { left: React.ReactNode; right: React.ReactNode }) {
+  return (
+    <View style={styles.splitRow}>
+      <View style={styles.splitCol}>{left}</View>
+      <View style={styles.splitDivider} />
+      <View style={styles.splitCol}>{right}</View>
+    </View>
+  );
+}
+
+function StatCard({ title, boereValue, britishValue }: { title: string; boereValue: string; britishValue: string }) {
+  return (
+    <Card>
+      <Text style={[type.caption, styles.subtext, styles.centerText]}>{title}</Text>
+      <SplitRow
+        left={<Text style={[type.bodyStrong, styles.text]}>{boereValue}</Text>}
+        right={<Text style={[type.bodyStrong, styles.text]}>{britishValue}</Text>}
+      />
+    </Card>
+  );
+}
+
+function streakLabel(n: number): string {
+  return n > 0 ? `${n} win${n > 1 ? 's' : ''}` : '—';
+}
+
 function TeamsTab({ tournaments }: { tournaments: import('../models').Tournament[] }) {
   const stats = useMemo(() => computeTeamStats(tournaments), [tournaments]);
+  const { boere, british } = stats;
   return (
     <View style={styles.gap}>
       <Card>
-        <View style={styles.emblemRow}>
-          <View style={styles.emblemCol}>
-            <TeamEmblem team="boere" />
-            <Text style={[type.smallStrong, { color: teamColor('boere') }]}>{teamLabel('boere')}</Text>
-          </View>
-          <Text style={[type.h2, styles.subtext]}>vs</Text>
-          <View style={styles.emblemCol}>
-            <TeamEmblem team="british" />
-            <Text style={[type.smallStrong, { color: teamColor('british') }]}>{teamLabel('british')}</Text>
-          </View>
-        </View>
-      </Card>
-
-      <Card>
-        <RecordRow boere={stats.boere} british={stats.british} />
-      </Card>
-
-      <Card>
-        <Text style={[type.caption, styles.subtext, styles.centerText]}>POINTS FOR / AGAINST</Text>
-        <CompareRow
-          boereValue={`${stats.boere.pointsFor} / ${stats.boere.pointsAgainst}`}
-          britishValue={`${stats.british.pointsFor} / ${stats.british.pointsAgainst}`}
+        <SplitRow
+          left={
+            <>
+              <TeamEmblem team="boere" />
+              <Text style={[type.smallStrong, styles.text]}>{teamLabel('boere')}</Text>
+            </>
+          }
+          right={
+            <>
+              <TeamEmblem team="british" />
+              <Text style={[type.smallStrong, styles.text]}>{teamLabel('british')}</Text>
+            </>
+          }
         />
       </Card>
 
-      <Card>
-        <Text style={[type.caption, styles.subtext, styles.centerText]}>BIGGEST TOURNAMENT WIN MARGIN</Text>
-        <CompareRow
-          boereValue={stats.boere.biggestWinMargin !== null ? `${stats.boere.biggestWinMargin}` : '—'}
-          britishValue={stats.british.biggestWinMargin !== null ? `${stats.british.biggestWinMargin}` : '—'}
-        />
-      </Card>
-
-      <Card>
-        <Text style={[type.caption, styles.subtext, styles.centerText]}>CURRENT STREAK</Text>
-        <CompareRow
-          boereValue={stats.boere.currentStreak > 0 ? `${stats.boere.currentStreak} win${stats.boere.currentStreak > 1 ? 's' : ''}` : '—'}
-          britishValue={stats.british.currentStreak > 0 ? `${stats.british.currentStreak} win${stats.british.currentStreak > 1 ? 's' : ''}` : '—'}
-        />
-      </Card>
-
-      <Card>
-        <Text style={[type.caption, styles.subtext, styles.centerText]}>BEST STREAK</Text>
-        <CompareRow
-          boereValue={stats.boere.bestStreak > 0 ? `${stats.boere.bestStreak} win${stats.boere.bestStreak > 1 ? 's' : ''}` : '—'}
-          britishValue={stats.british.bestStreak > 0 ? `${stats.british.bestStreak} win${stats.british.bestStreak > 1 ? 's' : ''}` : '—'}
-        />
-      </Card>
-
-      <Card>
-        <Text style={[type.caption, styles.subtext, styles.centerText]}>FOUR-BALL vs SINGLES</Text>
-        <CompareRow
-          boereValue={`FB ${stats.boere.fourBall.winPct.toFixed(0)}%  ·  SG ${stats.boere.singles.winPct.toFixed(0)}%`}
-          britishValue={`FB ${stats.british.fourBall.winPct.toFixed(0)}%  ·  SG ${stats.british.singles.winPct.toFixed(0)}%`}
-        />
-      </Card>
-    </View>
-  );
-}
-
-function RecordRow({ boere, british }: { boere: TeamStats; british: TeamStats }) {
-  return (
-    <View>
-      <Text style={[type.caption, styles.subtext, styles.centerText]}>RECORD (W-L-D)</Text>
-      <CompareRow
+      <StatCard
+        title="RECORD (W-L-D)"
         boereValue={`${boere.record.wins}-${boere.record.losses}-${boere.record.draws}`}
         britishValue={`${british.record.wins}-${british.record.losses}-${british.record.draws}`}
       />
-    </View>
-  );
-}
 
-function CompareRow({ boereValue, britishValue }: { boereValue: string; britishValue: string }) {
-  return (
-    <View style={styles.compareRow}>
-      <Text style={[type.bodyStrong, { color: teamColor('boere') }]}>{boereValue}</Text>
-      <Text style={[type.bodyStrong, { color: teamColor('british') }]}>{britishValue}</Text>
+      <StatCard
+        title="POINTS FOR / AGAINST"
+        boereValue={`${boere.pointsFor} / ${boere.pointsAgainst}`}
+        britishValue={`${british.pointsFor} / ${british.pointsAgainst}`}
+      />
+
+      <StatCard
+        title="BIGGEST TOURNAMENT WIN MARGIN"
+        boereValue={boere.biggestWinMargin !== null ? `${boere.biggestWinMargin}` : '—'}
+        britishValue={british.biggestWinMargin !== null ? `${british.biggestWinMargin}` : '—'}
+      />
+
+      <StatCard
+        title="CURRENT STREAK"
+        boereValue={streakLabel(boere.currentStreak)}
+        britishValue={streakLabel(british.currentStreak)}
+      />
+
+      <StatCard
+        title="BEST STREAK"
+        boereValue={streakLabel(boere.bestStreak)}
+        britishValue={streakLabel(british.bestStreak)}
+      />
+
+      <StatCard
+        title="FOUR-BALL"
+        boereValue={`${boere.fourBall.winPct.toFixed(0)}%`}
+        britishValue={`${british.fourBall.winPct.toFixed(0)}%`}
+      />
+
+      <StatCard
+        title="SINGLES"
+        boereValue={`${boere.singles.winPct.toFixed(0)}%`}
+        britishValue={`${british.singles.winPct.toFixed(0)}%`}
+      />
     </View>
   );
 }
@@ -190,9 +198,9 @@ const styles = StyleSheet.create({
   subtext: { color: colors.subtext },
   centerText: { textAlign: 'center' },
   gap: { gap: spacing.lg },
-  emblemRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xxl },
-  emblemCol: { alignItems: 'center', gap: spacing.sm },
-  compareRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.xs },
+  splitRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs },
+  splitCol: { flex: 1, alignItems: 'center', gap: spacing.sm },
+  splitDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: colors.border, marginVertical: spacing.xs },
   sectionTitle: { paddingHorizontal: spacing.xs },
   tableCard: { padding: spacing.sm, gap: 0 },
 });

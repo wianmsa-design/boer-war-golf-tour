@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Day1Match, Day2Match, formatHandicap, Player, Tournament } from '../models';
 import { computeStanding, playerPointsInTournament } from '../services/stats';
-import { colors, spacing, teamColor, type } from '../theme';
+import { colors, spacing, type } from '../theme';
 import Card from './Card';
 import PlayerIcon from './PlayerIcon';
 
@@ -44,13 +44,15 @@ export default function TournamentDetail({ tournament, players }: Props) {
           {sameCourse ? tournament.courses.day1 : `Day 1: ${tournament.courses.day1}  ·  Day 2: ${tournament.courses.day2}`}
         </Text>
         <View style={styles.standingRow}>
-          <Text style={[type.display, { color: teamColor('boere') }]}>{standing.boere}</Text>
+          <View style={styles.standingCol}>
+            <Text style={[type.display, styles.text]}>{standing.boere}</Text>
+            <Text style={[type.caption, styles.subtext]}>BOERE</Text>
+          </View>
           <Text style={[type.h2, styles.subtext]}>{tied ? 'Tied' : 'vs'}</Text>
-          <Text style={[type.display, { color: teamColor('british') }]}>{standing.british}</Text>
-        </View>
-        <View style={styles.standingLabels}>
-          <Text style={[type.caption, { color: teamColor('boere') }]}>BOERE</Text>
-          <Text style={[type.caption, { color: teamColor('british') }]}>BRITISH</Text>
+          <View style={styles.standingCol}>
+            <Text style={[type.display, styles.text]}>{standing.british}</Text>
+            <Text style={[type.caption, styles.subtext]}>BRITISH</Text>
+          </View>
         </View>
       </Card>
 
@@ -101,7 +103,7 @@ export default function TournamentDetail({ tournament, players }: Props) {
               <Text style={[type.small, styles.subtext, styles.lbHcp]}>
                 {entry.handicap !== null ? formatHandicap(entry.handicap) : '—'}
               </Text>
-              <Text style={[type.smallStrong, { color: teamColor(entry.team) }, styles.lbPts]}>{points}</Text>
+              <Text style={[type.smallStrong, { color: colors.accent }, styles.lbPts]}>{points}</Text>
             </View>
           );
         })}
@@ -136,9 +138,9 @@ function MatchRow({
     <View style={styles.matchRow}>
       <Text style={[type.caption, styles.subtext, styles.center]}>{label}</Text>
       <View style={styles.matchPlayers}>
-        <Text style={[type.body, { color: teamColor('boere') }]} numberOfLines={1}>{boere}</Text>
+        <Text style={[type.body, styles.text]} numberOfLines={1}>{boere}</Text>
         <Text style={[type.small, styles.subtext]}>vs</Text>
-        <Text style={[type.body, { color: teamColor('british') }]} numberOfLines={1}>{british}</Text>
+        <Text style={[type.body, styles.text]} numberOfLines={1}>{british}</Text>
       </View>
       <Text style={[type.small, decided ? styles.text : styles.subtext, styles.center]}>{outcome}</Text>
     </View>
@@ -157,11 +159,7 @@ const styles = StyleSheet.create({
     gap: spacing.xl,
     paddingVertical: spacing.sm,
   },
-  standingLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xxxl,
-  },
+  standingCol: { alignItems: 'center', gap: spacing.xs },
   section: { gap: spacing.sm },
   sectionTitle: { paddingHorizontal: spacing.xs, textAlign: 'center' },
   sectionCard: { gap: spacing.md },

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { formatHandicap, Player, playerFullName, RosterEntry, TeamId, Tournament } from '../models';
 import { mostRecentHandicap } from '../services/stats';
-import { colors, radius, spacing, teamColor, teamLabel, type } from '../theme';
+import { colors, radius, spacing, teamLabel, type } from '../theme';
 import Card from './Card';
 import PlayerIcon from './PlayerIcon';
 import PickerModal from './PickerModal';
@@ -104,12 +104,11 @@ function TeamColumn({
   onRemove: (playerId: string) => void;
   onHandicapChange: (playerId: string, handicap: RosterEntry['handicap']) => void;
 }) {
-  const color = teamColor(team);
   const remaining = slots - roster.length;
   return (
     <Card style={styles.column}>
       <View style={styles.columnHeader}>
-        <Text style={[type.h2, { color }]}>{teamLabel(team)}</Text>
+        <Text style={[type.h2, styles.text]}>{teamLabel(team)}</Text>
         <Text style={[type.small, styles.subtext]}>{roster.length} / {slots}</Text>
       </View>
 

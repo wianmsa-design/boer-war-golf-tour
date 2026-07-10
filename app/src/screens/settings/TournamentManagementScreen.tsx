@@ -10,7 +10,7 @@ import RosterBuilder from '../../components/RosterBuilder';
 import { useApp } from '../../services/AppContext';
 import { getAllCourses, rememberCustomCourse } from '../../services/courses';
 import { getTournament } from '../../services/stats';
-import { RosterEntry } from '../../models';
+import { RosterEntry, Tournament } from '../../models';
 import { colors, spacing, type } from '../../theme';
 
 type CourseMode = 'Same course' | 'Different per day';
@@ -22,7 +22,83 @@ export default function TournamentManagementScreen() {
   const active = getTournament(data.tournaments, data.currentTournamentId);
   const isActive = active && active.status === 'active';
 
-  return isActive ? <EditTournamentForm tournamentId={active!.id} /> : <CreateTournamentWizard />;
+  return (
+    <View style={styles.gap}>
+      {isActive ? <EditTournamentForm tournamentId={active!.id} /> : <CreateTournamentWizard />}
+      <AllTournamentsList tournaments={data.tournaments} currentTournamentId={data.currentTournamentId} />
+    </View>
+  );
+}
+
+function AllTournamentsList({ tournaments, currentTournamentId }: { tournaments: Tournament[]; currentTournamentId: string | null }) {
+  const { deleteTournament } = useApp();
+  if (tournaments.length === 0) return null;
+
+  const sorted = [...tournaments].sort((a, b) => b.year - a.year);
+
+  const handleDelete = (t: Tournament) => {
+    Alert.alert(
+      'Delete tournament',
+      `Delete "${t.name}"? This permanently removes it and its results from all-time stats. This can't be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => deleteTournament(t.id) },
+      ],
+    );
+  };
+
+  return (
+    <View style={styles.gap}>
+      <Text style={[type.caption, styles.subtext, styles.sectionTitle]}>ALL TOURNAMENTS</Text>
+      <Card style={styles.listCard}>
+        {sorted.map(t => (
+          <View key={t.id} style={styles.tournamentRow}>
+            <View style={styles.tournamentInfo}>
+              <Text style={[type.bodyStrong, styles.text]}>{t.name}</Text>
+              <Text style={[type.small, styles.subtext]}>
+                {t.status === 'active' ? 'Active' : 'Ended'}{t.id === currentTournamentId ? ' · Current' : ''}
+              </Text>
+            </View>
+            <Pressable onPress={() => handleDelete(t)} hitSlop={10}>
+              <Ionicons name="trash-outline" size={18} color={colors.danger} />
+            </Pressable>
+          </View>
+        ))}
+      </Card>
+    </View>
+  );
+}
+
+function YearPickerField({ label, value, onChange }: { label: string; value: number; onChange: (y: number) => void }) {
+  const [open, setOpen] = useState(false);
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const list: number[] = [];
+    for (let y = currentYear + 3; y >= currentYear - 10; y--) list.push(y);
+    return list;
+  }, []);
+
+  return (
+    <View style={styles.fieldGap}>
+      <Text style={[type.caption, styles.subtext]}>{label.toUpperCase()}</Text>
+      <Pressable style={styles.coursePicker} onPress={() => setOpen(true)}>
+        <Text style={[type.body, styles.text]}>{value}</Text>
+        <Ionicons name="chevron-down" size={16} color={colors.subtext} />
+      </Pressable>
+      <PickerModal
+        visible={open}
+        title="Select Year"
+        items={years}
+        keyExtractor={y => `${y}`}
+        renderLabel={y => `${y}`}
+        onSelect={y => {
+          onChange(y);
+          setOpen(false);
+        }}
+        onClose={() => setOpen(false)}
+      />
+    </View>
+  );
 }
 
 function useCourseList() {
@@ -147,12 +223,7 @@ function CreateTournamentWizard() {
       {step === 1 ? (
         <Card style={styles.gap}>
           <TextField label="Name" value={name} onChangeText={setName} />
-          <TextField
-            label="Year"
-            value={`${year}`}
-            onChangeText={t => setYear(parseInt(t, 10) || currentYear)}
-            keyboardType="number-pad"
-          />
+          <YearPickerField label="Year" value={year} onChange={setYear} />
           <PlayersPerTeamStepper value={playersPerTeam} onChange={setPlayersPerTeam} />
           <View style={styles.fieldGap}>
             <Text style={[type.caption, styles.subtext]}>COURSE(S)</Text>
@@ -270,7 +341,7 @@ function EditTournamentForm({ tournamentId }: { tournamentId: string }) {
       </Card>
       <Card style={styles.gap}>
         <TextField label="Name" value={name} onChangeText={setName} />
-        <TextField label="Year" value={`${year}`} onChangeText={t => setYear(parseInt(t, 10) || year)} keyboardType="number-pad" />
+        <YearPickerField label="Year" value={year} onChange={setYear} />
         <PlayersPerTeamStepper value={playersPerTeam} onChange={setPlayersPerTeam} />
         <View style={styles.fieldGap}>
           <Text style={[type.caption, styles.subtext]}>COURSE(S)</Text>
@@ -329,4 +400,16 @@ const styles = StyleSheet.create({
   },
   stepperValue: { minWidth: 32, textAlign: 'center' },
   actionsRow: { flexDirection: 'row', gap: spacing.md },
+  sectionTitle: { paddingHorizontal: spacing.xs },
+  listCard: { padding: spacing.sm, gap: 0 },
+  tournamentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.divider,
+  },
+  tournamentInfo: { gap: 2 },
 });

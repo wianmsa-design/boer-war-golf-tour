@@ -65,6 +65,7 @@ interface AppContextValue extends State {
   setDay1Result: (tournamentId: string, matchIndex: number, result: MatchOutcome | null, score: MatchScore | null) => Promise<boolean>;
   setDay2Result: (tournamentId: string, matchIndex: number, result: MatchOutcome | null, score: MatchScore | null) => Promise<boolean>;
   endTournament: (tournamentId: string) => Promise<boolean>;
+  deleteTournament: (tournamentId: string) => Promise<boolean>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -179,6 +180,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [mutate],
   );
   const endTournament = useCallback((tournamentId: string) => mutate(d => mutations.endTournament(d, tournamentId)), [mutate]);
+  const deleteTournament = useCallback((tournamentId: string) => mutate(d => mutations.deleteTournament(d, tournamentId)), [mutate]);
 
   return (
     <AppContext.Provider
@@ -199,6 +201,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setDay1Result,
         setDay2Result,
         endTournament,
+        deleteTournament,
       }}
     >
       {children}

@@ -14,8 +14,8 @@ const EMBLEMS: Record<TeamId, any> = {
 
 export default function TeamEmblem({ team, size = 96 }: Props) {
   return (
-    <View style={[styles.wrap, { width: size, height: size }]}>
-      <Image source={EMBLEMS[team]} style={{ width: size, height: size }} resizeMode="contain" />
+    <View style={[styles.wrap, { width: size, height: size, borderRadius: size / 2 }]}>
+      <Image source={EMBLEMS[team]} style={{ width: size, height: size }} resizeMode="cover" />
     </View>
   );
 }
@@ -24,5 +24,6 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
 });

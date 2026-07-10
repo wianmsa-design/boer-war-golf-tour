@@ -253,3 +253,11 @@ export function endTournament(data: AppData, tournamentId: string): AppData {
   });
   return updated.currentTournamentId === tournamentId ? { ...updated, currentTournamentId: null } : updated;
 }
+
+export function deleteTournament(data: AppData, tournamentId: string): AppData {
+  return {
+    ...data,
+    tournaments: data.tournaments.filter(t => t.id !== tournamentId),
+    currentTournamentId: data.currentTournamentId === tournamentId ? null : data.currentTournamentId,
+  };
+}

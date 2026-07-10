@@ -1,9 +1,8 @@
 // Design system tokens. App is dark-mode only — no light variant.
 //
-// Rule: team colours (boere/british) are DATA, not decoration. They may only
-// appear where the two teams are actually being distinguished: score cells,
-// standings bars, the ring on a player icon, emblems. Never as a general UI
-// color (buttons, nav, headers use the neutral palette + white accent below).
+// Rule: team colours (boere/british) are reserved for exactly one place —
+// the ring around a player icon. Everywhere else (scores, standings, stat
+// text, buttons) uses the neutral white/grey palette + the mint accent below.
 
 export const colors = {
   bg: '#101513',
@@ -15,12 +14,12 @@ export const colors = {
   divider: 'rgba(255,255,255,0.06)',
   dimmed: 'rgba(0,0,0,0.5)',
 
-  // Interactive accent — clean white. Used for buttons, links, active
+  // Interactive accent — bright mint. Used for buttons, links, active
   // states, focus rings. Deliberately outside the orange/blue team space.
-  accent: '#F2F4F1',
-  accentPressed: '#C7CCC9',
-  accentMuted: 'rgba(242,244,241,0.14)',
-  onAccent: '#101513',
+  accent: '#00FFBA',
+  accentPressed: '#00CC94',
+  accentMuted: 'rgba(0,255,186,0.14)',
+  onAccent: '#0B1512',
 
   success: '#4CAF7D',
   danger: '#D9534F',
@@ -72,5 +71,5 @@ export function teamMutedColor(team: 'boere' | 'british'): string {
 }
 
 export function teamLabel(team: 'boere' | 'british'): string {
-  return team === 'boere' ? 'The Boere' : 'The British';
+  return team === 'boere' ? 'Boere' : 'British';
 }
