@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Boer War Golf Tour",
+    "slug": "boer-war-golf-tour",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#101513",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#101513"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.wianm.boerwargolftour"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
