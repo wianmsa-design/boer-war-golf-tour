@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
   },
   resultBtnActive: { backgroundColor: colors.accent, borderColor: colors.accent },
   resultBtnDisabled: { opacity: 0.4 },
-  scoreRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  scoreRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.xs },
   scoreChip: {
     borderWidth: 1,
     borderColor: colors.border,
