@@ -48,7 +48,7 @@ export default function TournamentDetail({ tournament, players }: Props) {
         <View style={styles.standingRow}>
           <View style={styles.standingCol}>
             <TeamEmblem team="boere" size={44} />
-            <Text style={[type.display, styles.text]}>{standing.boere}</Text>
+            <Text style={[type.display, winnerSide === 'boere' ? { color: colors.accent } : styles.text]}>{standing.boere}</Text>
             <Text style={[type.caption, winnerSide === 'boere' ? { color: colors.accent } : styles.subtext, styles.center]}>
               {teamLabel('boere').toUpperCase()}
             </Text>
@@ -56,7 +56,7 @@ export default function TournamentDetail({ tournament, players }: Props) {
           <Text style={[type.h2, styles.subtext]}>{tied ? 'Tied' : 'vs'}</Text>
           <View style={styles.standingCol}>
             <TeamEmblem team="british" size={44} />
-            <Text style={[type.display, styles.text]}>{standing.british}</Text>
+            <Text style={[type.display, winnerSide === 'british' ? { color: colors.accent } : styles.text]}>{standing.british}</Text>
             <Text style={[type.caption, winnerSide === 'british' ? { color: colors.accent } : styles.subtext, styles.center]}>
               {teamLabel('british').toUpperCase()}
             </Text>
