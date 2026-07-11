@@ -15,12 +15,12 @@ export const colors = {
   divider: 'rgba(255,255,255,0.06)',
   dimmed: 'rgba(0,0,0,0.5)',
 
-  // Interactive accent — red. Used generously: buttons, active
+  // Interactive accent — tan. Used generously: buttons, active
   // states, borders, focus rings, headline stat values.
-  accent: '#ED2423',
-  accentPressed: '#C00E0E',
-  accentMuted: 'rgba(237,36,35,0.16)',
-  onAccent: '#FFFFFF',
+  accent: '#B79275',
+  accentPressed: '#9C704E',
+  accentMuted: 'rgba(183,146,117,0.16)',
+  onAccent: '#1A1206',
 
   success: '#4CAF7D',
   danger: '#D9534F',
