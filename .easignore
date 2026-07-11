@@ -1,0 +1,40 @@
+# EAS build archives the whole repo (this repo is a single git root with
+# the Expo project living in app/), using these rules instead of
+# .gitignore. app/src/config.local.ts is intentionally excluded from git
+# (it holds the real jsonbin write key) but EAS still needs the actual
+# file on disk to bundle it into the build, so it must NOT be excluded
+# here. Paths are relative to the repo root.
+
+app/node_modules/
+app/.expo/
+app/dist/
+app/web-build/
+app/expo-env.d.ts
+
+app/.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+app/ios
+app/android
+
+app/.metro-health-check*
+
+.env
+.env*.local
+web/js/config.local.js
+
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+.DS_Store
+*.pem
+Thumbs.db
+
+*.tsbuildinfo
+
+/historical.xlsx
