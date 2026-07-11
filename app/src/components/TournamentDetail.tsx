@@ -49,7 +49,7 @@ export default function TournamentDetail({ tournament, players }: Props) {
           <View style={styles.standingCol}>
             <TeamEmblem team="boere" size={44} />
             <Text style={[type.display, winnerSide === 'boere' ? { color: colors.accent } : styles.text]}>{standing.boere}</Text>
-            <Text style={[type.caption, winnerSide === 'boere' ? { color: colors.accent } : styles.subtext, styles.center]}>
+            <Text style={[type.caption, winnerSide === 'boere' ? styles.winnerLabel : styles.subtext, styles.center]}>
               {teamLabel('boere').toUpperCase()}
             </Text>
           </View>
@@ -57,7 +57,7 @@ export default function TournamentDetail({ tournament, players }: Props) {
           <View style={styles.standingCol}>
             <TeamEmblem team="british" size={44} />
             <Text style={[type.display, winnerSide === 'british' ? { color: colors.accent } : styles.text]}>{standing.british}</Text>
-            <Text style={[type.caption, winnerSide === 'british' ? { color: colors.accent } : styles.subtext, styles.center]}>
+            <Text style={[type.caption, winnerSide === 'british' ? styles.winnerLabel : styles.subtext, styles.center]}>
               {teamLabel('british').toUpperCase()}
             </Text>
           </View>
@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
   container: { gap: spacing.lg },
   text: { color: colors.text },
   subtext: { color: colors.subtext },
+  winnerLabel: { color: colors.accent, fontWeight: '800' },
   center: { textAlign: 'center' },
   noLetterSpacing: { letterSpacing: 0 },
   standingRow: {
