@@ -37,7 +37,7 @@ export default function PlayerIcon({ firstName, surname, team, size = 28 }: Prop
 const styles = StyleSheet.create({
   ring: {
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: colors.bg,
     backgroundColor: colors.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',

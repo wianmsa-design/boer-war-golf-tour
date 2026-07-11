@@ -17,9 +17,9 @@ export const colors = {
 
   // Interactive accent — red. Used generously: buttons, active
   // states, borders, focus rings, headline stat values.
-  accent: '#E63946',
-  accentPressed: '#C61724',
-  accentMuted: 'rgba(230,57,70,0.16)',
+  accent: '#ED2423',
+  accentPressed: '#C00E0E',
+  accentMuted: 'rgba(237,36,35,0.16)',
   onAccent: '#FFFFFF',
 
   success: '#4CAF7D',
