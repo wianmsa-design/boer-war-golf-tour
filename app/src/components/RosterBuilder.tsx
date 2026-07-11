@@ -108,7 +108,7 @@ function TeamColumn({
   return (
     <Card style={styles.column}>
       <View style={styles.columnHeader}>
-        <Text style={[type.h2, styles.text]}>{teamLabel(team)}</Text>
+        <Text style={[type.h2, styles.text]}>{teamLabel(team).toUpperCase()}</Text>
         <Text style={[type.small, styles.subtext]}>{roster.length} / {slots}</Text>
       </View>
 

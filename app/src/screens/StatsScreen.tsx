@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Animated, Image, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Screen from '../components/Screen';
 import Card from '../components/Card';
 import SegmentedControl from '../components/SegmentedControl';
@@ -46,10 +47,6 @@ export default function StatsScreen() {
 
   return (
     <Screen onRefresh={refresh} refreshing={refreshing} title="Stats">
-      <View style={styles.banner}>
-        <Image source={require('../../assets/icon.png')} style={styles.bannerLogo} />
-        <Text style={[type.h2, styles.text]}>Anglo Boer War Golf Tour</Text>
-      </View>
       <SegmentedControl options={SUB_TABS} value={tab} onChange={setTabAnimated} />
       {endedCount === 0 ? (
         <Card>
@@ -80,24 +77,37 @@ function SplitRow({ left, right }: { left: React.ReactNode; right: React.ReactNo
   );
 }
 
-function StatCard({
-  title,
-  boereValue,
-  britishValue,
-  winner,
-}: {
+interface StatRowData {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
   title: string;
   boereValue: string;
   britishValue: string;
   winner: TeamId | null;
-}) {
+}
+
+function StatRowHeader({ icon, title }: { icon: StatRowData['icon']; title: string }) {
+  return (
+    <View style={styles.statRowHeader}>
+      <Ionicons name={icon} size={13} color={colors.subtext} />
+      <Text style={[type.caption, styles.subtext]}>{title}</Text>
+    </View>
+  );
+}
+
+/** A card holding one or more related stat rows (e.g. Points + Margin), separated by dividers. */
+function StatGroupCard({ rows }: { rows: StatRowData[] }) {
   return (
     <Card>
-      <Text style={[type.caption, styles.subtext, styles.centerText]}>{title}</Text>
-      <SplitRow
-        left={<Text style={[type.bodyStrong, winner === 'boere' ? { color: colors.accent } : styles.text]}>{boereValue}</Text>}
-        right={<Text style={[type.bodyStrong, winner === 'british' ? { color: colors.accent } : styles.text]}>{britishValue}</Text>}
-      />
+      {rows.map((r, i) => (
+        <React.Fragment key={r.title}>
+          {i > 0 && <View style={styles.rowDivider} />}
+          <StatRowHeader icon={r.icon} title={r.title} />
+          <SplitRow
+            left={<Text style={[type.bodyStrong, r.winner === 'boere' ? { color: colors.accent } : styles.text]}>{r.boereValue}</Text>}
+            right={<Text style={[type.bodyStrong, r.winner === 'british' ? { color: colors.accent } : styles.text]}>{r.britishValue}</Text>}
+          />
+        </React.Fragment>
+      ))}
     </Card>
   );
 }
@@ -118,7 +128,10 @@ function RecordCard({ boere, british }: { boere: TeamStats; british: TeamStats }
   const winner = betterOf(boere.record.wins, british.record.wins);
   return (
     <Card style={styles.recordCard} elevated>
-      <Text style={[type.h2, styles.text, styles.centerText]}>RECORD</Text>
+      <View style={styles.recordTitleRow}>
+        <Ionicons name="trophy" size={16} color={colors.accent} />
+        <Text style={[type.h2, styles.text]}>RECORD</Text>
+      </View>
       <SplitRow
         left={<RecordPyramid record={boere.record} emphasize={winner === 'boere'} />}
         right={<RecordPyramid record={british.record} emphasize={winner === 'british'} />}
@@ -155,13 +168,13 @@ function TeamsTab({ tournaments }: { tournaments: import('../models').Tournament
           left={
             <>
               <TeamEmblem team="boere" />
-              <Text style={[type.smallStrong, styles.text]}>{teamLabel('boere')}</Text>
+              <Text style={[type.smallStrong, styles.text]}>{teamLabel('boere').toUpperCase()}</Text>
             </>
           }
           right={
             <>
               <TeamEmblem team="british" />
-              <Text style={[type.smallStrong, styles.text]}>{teamLabel('british')}</Text>
+              <Text style={[type.smallStrong, styles.text]}>{teamLabel('british').toUpperCase()}</Text>
             </>
           }
         />
@@ -169,46 +182,61 @@ function TeamsTab({ tournaments }: { tournaments: import('../models').Tournament
 
       <RecordCard boere={boere} british={british} />
 
-      <StatCard
-        title="POINTS FOR / AGAINST"
-        boereValue={`${boere.pointsFor} / ${boere.pointsAgainst}`}
-        britishValue={`${british.pointsFor} / ${british.pointsAgainst}`}
-        winner={betterOf(boere.pointsFor, british.pointsFor)}
+      <StatGroupCard
+        rows={[
+          {
+            icon: 'stats-chart-outline',
+            title: 'POINTS FOR / AGAINST',
+            boereValue: `${boere.pointsFor} / ${boere.pointsAgainst}`,
+            britishValue: `${british.pointsFor} / ${british.pointsAgainst}`,
+            winner: betterOf(boere.pointsFor, british.pointsFor),
+          },
+          {
+            icon: 'flash-outline',
+            title: 'BIGGEST TOURNAMENT WIN MARGIN',
+            boereValue: boere.biggestWinMargin !== null ? `${boere.biggestWinMargin}` : '—',
+            britishValue: british.biggestWinMargin !== null ? `${british.biggestWinMargin}` : '—',
+            winner: betterMargin(boere.biggestWinMargin, british.biggestWinMargin),
+          },
+        ]}
       />
 
-      <StatCard
-        title="BIGGEST TOURNAMENT WIN MARGIN"
-        boereValue={boere.biggestWinMargin !== null ? `${boere.biggestWinMargin}` : '—'}
-        britishValue={british.biggestWinMargin !== null ? `${british.biggestWinMargin}` : '—'}
-        winner={betterMargin(boere.biggestWinMargin, british.biggestWinMargin)}
+      <StatGroupCard
+        rows={[
+          {
+            icon: 'flame-outline',
+            title: 'CURRENT STREAK',
+            boereValue: streakLabel(boere.currentStreak),
+            britishValue: streakLabel(british.currentStreak),
+            winner: betterOf(boere.currentStreak, british.currentStreak),
+          },
+          {
+            icon: 'ribbon-outline',
+            title: 'BEST STREAK',
+            boereValue: streakLabel(boere.bestStreak),
+            britishValue: streakLabel(british.bestStreak),
+            winner: betterOf(boere.bestStreak, british.bestStreak),
+          },
+        ]}
       />
 
-      <StatCard
-        title="CURRENT STREAK"
-        boereValue={streakLabel(boere.currentStreak)}
-        britishValue={streakLabel(british.currentStreak)}
-        winner={betterOf(boere.currentStreak, british.currentStreak)}
-      />
-
-      <StatCard
-        title="BEST STREAK"
-        boereValue={streakLabel(boere.bestStreak)}
-        britishValue={streakLabel(british.bestStreak)}
-        winner={betterOf(boere.bestStreak, british.bestStreak)}
-      />
-
-      <StatCard
-        title="FOUR-BALL"
-        boereValue={`${boere.fourBall.winPct.toFixed(0)}%`}
-        britishValue={`${british.fourBall.winPct.toFixed(0)}%`}
-        winner={betterOf(boere.fourBall.winPct, british.fourBall.winPct)}
-      />
-
-      <StatCard
-        title="SINGLES"
-        boereValue={`${boere.singles.winPct.toFixed(0)}%`}
-        britishValue={`${british.singles.winPct.toFixed(0)}%`}
-        winner={betterOf(boere.singles.winPct, british.singles.winPct)}
+      <StatGroupCard
+        rows={[
+          {
+            icon: 'people-outline',
+            title: 'FOUR-BALL',
+            boereValue: `${boere.fourBall.winPct.toFixed(0)}%`,
+            britishValue: `${british.fourBall.winPct.toFixed(0)}%`,
+            winner: betterOf(boere.fourBall.winPct, british.fourBall.winPct),
+          },
+          {
+            icon: 'person-outline',
+            title: 'SINGLES',
+            boereValue: `${boere.singles.winPct.toFixed(0)}%`,
+            britishValue: `${british.singles.winPct.toFixed(0)}%`,
+            winner: betterOf(boere.singles.winPct, british.singles.winPct),
+          },
+        ]}
       />
     </View>
   );
@@ -226,8 +254,8 @@ function PlayersTab({ tournaments, players }: { tournaments: import('../models')
     <View style={styles.gap}>
       <Card style={styles.tableCard}>
         <PlayerTableHeader />
-        {ranked.map(r => (
-          <PlayerStatsRow key={r.playerId} player={playerById(r.playerId)} stats={r} rankLabel={r.rankLabel} displayWinPct={r.displayWinPct} />
+        {ranked.map((r, i) => (
+          <PlayerStatsRow key={r.playerId} player={playerById(r.playerId)} stats={r} rankLabel={r.rankLabel} displayWinPct={r.displayWinPct} alt={i % 2 === 1} />
         ))}
       </Card>
 
@@ -238,8 +266,8 @@ function PlayersTab({ tournaments, players }: { tournaments: import('../models')
           </Text>
           <Card style={styles.tableCard}>
             <PlayerTableHeader />
-            {insufficient.map(s => (
-              <PlayerStatsRow key={s.playerId} player={playerById(s.playerId)} stats={s} />
+            {insufficient.map((s, i) => (
+              <PlayerStatsRow key={s.playerId} player={playerById(s.playerId)} stats={s} alt={i % 2 === 1} />
             ))}
           </Card>
         </View>
@@ -252,16 +280,16 @@ const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   text: { color: colors.text },
   subtext: { color: colors.subtext },
-  centerText: { textAlign: 'center' },
   gap: { gap: spacing.lg },
   splitRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs },
   splitCol: { flex: 1, alignItems: 'center', gap: spacing.sm },
   splitDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: colors.border, marginVertical: spacing.xs },
   sectionTitle: { paddingHorizontal: spacing.xs },
   tableCard: { padding: spacing.sm, gap: 0 },
-  banner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
-  bannerLogo: { width: 40, height: 40, borderRadius: 8 },
   recordCard: { borderColor: colors.accentMuted, borderWidth: 1.5 },
+  recordTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs },
   pyramid: { alignItems: 'center', gap: 2 },
   pyramidRow: { flexDirection: 'row', gap: spacing.md },
+  statRowHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs },
+  rowDivider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.divider },
 });

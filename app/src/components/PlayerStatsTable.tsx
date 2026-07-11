@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Player } from '../models';
 import { PlayerRecord, PlayerStats } from '../services/stats';
-import { colors, spacing, type } from '../theme';
+import { colors, radius, spacing, type } from '../theme';
 import PlayerIcon from './PlayerIcon';
 
 function fmtRecord(r: PlayerRecord): string {
@@ -36,18 +36,24 @@ interface Props {
   stats: PlayerStats;
   rankLabel?: string;
   displayWinPct?: number;
+  /** Alternate row shading for zebra striping. */
+  alt?: boolean;
 }
 
-export default function PlayerStatsRow({ player, stats, rankLabel, displayWinPct }: Props) {
+export default function PlayerStatsRow({ player, stats, rankLabel, displayWinPct, alt }: Props) {
   const [expanded, setExpanded] = useState(false);
   const team = stats.mostRecentTeam;
   const pct = displayWinPct ?? Math.round(stats.winPct * 10) / 10;
   const record = combinedRecord(stats);
 
   return (
-    <Pressable onPress={() => setExpanded(e => !e)} style={styles.wrap}>
+    <Pressable onPress={() => setExpanded(e => !e)} style={[styles.wrap, alt && styles.wrapAlt]}>
       <View style={styles.row}>
-        <Text style={[type.smallStrong, styles.colPos, { color: colors.accent }]}>{rankLabel ?? '—'}</Text>
+        <View style={styles.colPos}>
+          <View style={styles.posPill}>
+            <Text style={[type.smallStrong, { color: colors.accent }]}>{rankLabel ?? '—'}</Text>
+          </View>
+        </View>
         <View style={styles.colIcon}>
           {team && <PlayerIcon firstName={player.firstName} surname={player.surname} team={team} size={24} />}
         </View>
@@ -84,6 +90,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   wrap: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider },
+  wrapAlt: { backgroundColor: colors.surfaceAlt },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -102,7 +109,16 @@ const styles = StyleSheet.create({
   },
   text: { color: colors.text },
   subtext: { color: colors.subtext },
-  colPos: { width: 28, textAlign: 'center' },
+  colPos: { width: 28, alignItems: 'center' },
+  posPill: {
+    minWidth: 24,
+    height: 20,
+    paddingHorizontal: 4,
+    borderRadius: radius.sm,
+    backgroundColor: colors.accentMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   colIcon: { width: 24, alignItems: 'center' },
   colName: { flex: 1, textAlign: 'left' },
   colRecord: { width: 56, textAlign: 'center' },
