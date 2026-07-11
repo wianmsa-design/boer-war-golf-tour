@@ -6,11 +6,11 @@
 // neutral white/grey palette + the accent below.
 
 export const colors = {
-  bg: '#101513',
-  surface: '#1A211E',
-  surfaceAlt: '#212A26',
-  text: '#F2F4F1',
-  subtext: '#8FA098',
+  bg: '#111413',
+  surface: '#1C1F1E',
+  surfaceAlt: '#232826',
+  text: '#F2F3F2',
+  subtext: '#939C98',
   border: 'rgba(255,255,255,0.08)',
   divider: 'rgba(255,255,255,0.06)',
   dimmed: 'rgba(0,0,0,0.5)',
