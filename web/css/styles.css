@@ -1,22 +1,17 @@
 /* Same design tokens as the app (app/src/theme/index.ts). Dark mode only. */
 :root {
-  --bg: #101513;
-  --surface: #1a211e;
-  --surface-alt: #212a26;
-  --text: #f2f4f1;
-  --subtext: #8fa098;
+  --bg: #121212;
+  --surface: #1d1d1d;
+  --surface-alt: #262626;
+  --text: #f3f3f3;
+  --subtext: #989898;
   --border: rgba(255, 255, 255, 0.08);
   --divider: rgba(255, 255, 255, 0.06);
 
-  --accent: #f2f4f1;
-  --accent-pressed: #c7ccc9;
-  --accent-muted: rgba(242, 244, 241, 0.14);
-  --on-accent: #101513;
-
-  --boere: #e2622a;
-  --boere-muted: rgba(226, 98, 42, 0.16);
-  --british: #3d7fe0;
-  --british-muted: rgba(61, 127, 224, 0.16);
+  --accent: #b79275;
+  --accent-pressed: #9c704e;
+  --accent-muted: rgba(183, 146, 117, 0.16);
+  --on-accent: #1a1206;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -54,16 +49,23 @@ body {
 h1, h2, h3 { margin: 0; }
 p { margin: 0; }
 
+/* Default text alignment is centre app-wide, matching the app. Scannable
+   lists (leaderboards, past-tournament rows) and the page title are the
+   explicit left-aligned exceptions, set directly on their own rules below. */
 .page-title { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; padding: var(--space-xs) 0; }
-.h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; }
-.h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.1px; }
-.body { font-size: 15px; }
-.body-strong { font-size: 15px; font-weight: 600; }
-.small { font-size: 13px; }
-.small-strong { font-size: 13px; font-weight: 700; }
-.caption { font-size: 11px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; }
+.display { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; text-align: center; }
+.h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; text-align: center; }
+.h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.1px; text-align: center; }
+.body { font-size: 15px; text-align: center; }
+.body-strong { font-size: 15px; font-weight: 600; text-align: center; }
+.small { font-size: 13px; text-align: center; }
+.small-strong { font-size: 13px; font-weight: 700; text-align: center; }
+.caption { font-size: 11px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; text-align: center; }
 
 .subtext { color: var(--subtext); }
+.accent-text { color: var(--accent); }
+.winner-label { color: var(--accent); font-weight: 800; }
+.left-text { text-align: left; }
 
 .card {
   background: var(--surface);
@@ -148,9 +150,6 @@ button { font-family: inherit; }
   align-self: flex-start;
 }
 
-.boere-text { color: var(--boere); }
-.british-text { color: var(--british); }
-
 .standing-row {
   display: flex;
   align-items: center;
@@ -159,13 +158,7 @@ button { font-family: inherit; }
   padding: var(--space-sm) 0;
 }
 
-.standing-row .score { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; }
-
-.standing-labels {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 var(--space-xxxl);
-}
+.standing-col { display: flex; flex-direction: column; align-items: center; gap: var(--space-xs); }
 
 .center-text { text-align: center; }
 
@@ -182,23 +175,34 @@ button { font-family: inherit; }
 
 .match-players { display: flex; align-items: center; justify-content: center; gap: var(--space-sm); flex-wrap: wrap; }
 
+/* Player icon: ring (border matches page background so it recedes, like the
+   emblem below) + a clipped inner wrapper that zooms the source icon past
+   the thin white bezel baked into the 96px team PNGs. */
 .player-icon {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  border: 2px solid var(--border);
+  border: 2px solid var(--bg);
   background: var(--surface-alt);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  object-fit: cover;
-  padding: 2px;
-  box-sizing: border-box;
 }
 
-.player-icon.boere { border-color: var(--boere); }
-.player-icon.british { border-color: var(--british); }
+.player-icon-clip {
+  overflow: hidden;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-icon-clip img {
+  width: 135%;
+  height: 135%;
+  object-fit: cover;
+}
 
 .lb-card { padding: var(--space-sm) var(--space-md); gap: 0; }
 
@@ -212,23 +216,59 @@ button { font-family: inherit; }
 }
 
 .lb-row:last-child { border-bottom: none; }
+.lb-row.alt { background: var(--surface-alt); }
 .lb-header { border-bottom: 1px solid var(--border); }
-.lb-pos { width: 24px; text-align: center; flex-shrink: 0; }
+.lb-pos { width: 28px; text-align: center; flex-shrink: 0; }
 .lb-icon { width: 32px; display: inline-flex; justify-content: center; flex-shrink: 0; }
-.lb-name { flex: 1; }
+.lb-name { flex: 1; text-align: left; }
 .lb-hcp { width: 40px; text-align: center; flex-shrink: 0; }
-.lb-pts { width: 36px; text-align: right; flex-shrink: 0; }
+.lb-pts { width: 36px; text-align: center; flex-shrink: 0; }
 
-.emblem {
+.rank-pill {
+  display: inline-flex;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-muted);
+  color: var(--accent);
+  align-items: center;
+  justify-content: center;
+}
+
+/* Team emblem: ring matches page background, image zoomed past its own edge
+   so nothing but flag color reaches the border. */
+.emblem-wrap {
   width: 96px;
   height: 96px;
-  object-fit: contain;
+  border-radius: 50%;
+  border: 3px solid var(--bg);
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
+
+.emblem-wrap.sm { width: 44px; height: 44px; border-width: 1.5px; }
+.emblem-wrap.xs { width: 20px; height: 20px; border-width: 1.5px; }
+
+.emblem-wrap img { width: 100%; height: 100%; object-fit: cover; }
 
 .emblem-row { display: flex; align-items: center; justify-content: center; gap: var(--space-xxl); }
 .emblem-col { display: flex; flex-direction: column; align-items: center; gap: var(--space-sm); }
 
-.compare-row { display: flex; justify-content: space-between; margin-top: var(--space-xs); }
+.compare-row { display: flex; align-items: center; margin-top: var(--space-xs); }
+.compare-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--space-sm); }
+.compare-divider { width: 1px; align-self: stretch; background: var(--border); margin: var(--space-xs) 0; }
+
+.stat-row-header { display: flex; align-items: center; justify-content: center; gap: var(--space-xs); }
+.row-divider { height: 1px; background: var(--divider); margin: var(--space-md) 0; }
+
+.record-card { border-color: var(--accent-muted); border-width: 1.5px; }
+.record-title { display: flex; align-items: center; justify-content: center; gap: var(--space-xs); }
+.pyramid { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.pyramid-row { display: flex; gap: var(--space-md); }
 
 .pill {
   padding: var(--space-xs) var(--space-md);
@@ -256,12 +296,14 @@ button { font-family: inherit; }
   cursor: pointer;
 }
 
-.list-row .info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.list-row .info { flex: 1; display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.row-right { display: flex; align-items: center; gap: var(--space-xs); }
+.score-col { display: flex; flex-direction: column; align-items: center; gap: 1px; }
 .chev { color: var(--subtext); flex-shrink: 0; }
 
 .pt-row { cursor: pointer; }
-.pt-record { width: 64px; text-align: center; flex-shrink: 0; }
-.pt-pct { width: 52px; text-align: right; flex-shrink: 0; }
+.pt-record { width: 56px; text-align: center; flex-shrink: 0; }
+.pt-pct { width: 52px; text-align: center; flex-shrink: 0; }
 .pt-detail { padding: 0 0 var(--space-md); }
 
 .back-link {

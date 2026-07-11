@@ -10,5 +10,5 @@ export function formatHandicap(h) {
 }
 
 export function teamLabel(team) {
-  return team === 'boere' ? 'The Boere' : 'The British';
+  return team === 'boere' ? 'Boere Republic' : 'British Empire';
 }

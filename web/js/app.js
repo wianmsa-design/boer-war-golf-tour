@@ -1,5 +1,5 @@
 import { fetchData } from './api.js';
-import { playerFullName, formatHandicap } from './models.js';
+import { formatHandicap, teamLabel } from './models.js';
 import {
   getTournament,
   computeStanding,
@@ -48,7 +48,24 @@ async function load() {
 
 function playerIcon(player, team) {
   if (!team) return `<span class="player-icon"></span>`;
-  return `<img class="player-icon ${team}" src="assets/team/${team}_icon_96.png" alt="" />`;
+  return `
+    <span class="player-icon">
+      <span class="player-icon-clip"><img src="assets/team/${team}_icon_96.png" alt="" /></span>
+    </span>
+  `;
+}
+
+function betterOf(a, b) {
+  if (a > b) return 'boere';
+  if (b > a) return 'british';
+  return null;
+}
+
+function betterMargin(a, b) {
+  if (a === null && b === null) return null;
+  if (a === null) return 'british';
+  if (b === null) return 'boere';
+  return betterOf(a, b);
 }
 
 function firstNameById(players, id) {
@@ -60,7 +77,7 @@ function firstNameById(players, id) {
 function outcomeLabel(m) {
   if (m.result === null) return 'Not yet played';
   if (m.result === 'halved') return 'Halved';
-  const winner = m.result === 'boere' ? 'Boere' : 'British';
+  const winner = teamLabel(m.result);
   return m.score ? `${winner} win ${m.score}` : `${winner} win`;
 }
 
@@ -68,30 +85,31 @@ function tournamentDetailHtml(tournament, players) {
   const standing = tournament.status === 'ended' ? tournament.result : computeStanding(tournament);
   const sameCourse = tournament.courses.day1 === tournament.courses.day2;
   const tied = standing.boere === standing.british && tournament.status === 'ended';
+  const winnerSide = standing.boere > standing.british ? 'boere' : standing.british > standing.boere ? 'british' : null;
 
-  const day1Rows = tournament.matches.day1.map(m => `
+  const matchRow = (m, boereLabel, britishLabel) => `
     <div class="match-row">
-      <div class="caption subtext center-text">Match ${m.match}</div>
+      <div class="caption subtext">Match ${m.match}</div>
       <div class="match-players">
-        <span class="boere-text body">${m.boere.map(id => firstNameById(players, id)).join(' &amp; ')}</span>
+        <span class="body ${m.result === 'boere' ? 'body-strong winner-label' : ''}">${boereLabel}</span>
         <span class="small subtext">vs</span>
-        <span class="british-text body">${m.british.map(id => firstNameById(players, id)).join(' &amp; ')}</span>
+        <span class="body ${m.result === 'british' ? 'body-strong winner-label' : ''}">${britishLabel}</span>
       </div>
-      <div class="small center-text ${m.result !== null ? '' : 'subtext'}">${outcomeLabel(m)}</div>
+      <div class="small ${m.result !== null ? '' : 'subtext'}">${outcomeLabel(m)}</div>
     </div>
-  `).join('');
+  `;
 
-  const day2Rows = tournament.matches.day2.map(m => `
-    <div class="match-row">
-      <div class="caption subtext center-text">Match ${m.match}</div>
-      <div class="match-players">
-        <span class="boere-text body">${firstNameById(players, m.boere)}</span>
-        <span class="small subtext">vs</span>
-        <span class="british-text body">${firstNameById(players, m.british)}</span>
-      </div>
-      <div class="small center-text ${m.result !== null ? '' : 'subtext'}">${outcomeLabel(m)}</div>
-    </div>
-  `).join('');
+  const day1Rows = tournament.matches.day1.map(m => matchRow(
+    m,
+    m.boere.map(id => firstNameById(players, id)).join(' &amp; '),
+    m.british.map(id => firstNameById(players, id)).join(' &amp; '),
+  )).join('');
+
+  const day2Rows = tournament.matches.day2.map(m => matchRow(
+    m,
+    firstNameById(players, m.boere),
+    firstNameById(players, m.british),
+  )).join('');
 
   const leaderboard = [
     ...tournament.rosters.boere.map(r => ({ ...r, team: 'boere' })),
@@ -110,23 +128,27 @@ function tournamentDetailHtml(tournament, players) {
         <span class="lb-icon">${playerIcon(player, entry.team)}</span>
         <span class="body lb-name">${esc(player.firstName)}</span>
         <span class="small subtext lb-hcp">${hcp}</span>
-        <span class="small-strong ${entry.team}-text lb-pts">${points}</span>
+        <span class="small-strong accent-text lb-pts">${points}</span>
       </div>
     `;
   }).join('');
 
   return `
     <div class="card">
-      <div class="h1 center-text">${esc(tournament.name)}</div>
-      <div class="small subtext center-text">${sameCourse ? esc(tournament.courses.day1) : `Day 1: ${esc(tournament.courses.day1)} · Day 2: ${esc(tournament.courses.day2)}`}</div>
+      <div class="h1">${esc(tournament.name)}</div>
+      <div class="small subtext">${sameCourse ? esc(tournament.courses.day1) : `Day 1: ${esc(tournament.courses.day1)} · Day 2: ${esc(tournament.courses.day2)}`}</div>
       <div class="standing-row">
-        <span class="score boere-text">${standing.boere}</span>
+        <div class="standing-col">
+          <span class="emblem-wrap sm"><img src="assets/team/boere_emblem_512.png" alt="" /></span>
+          <span class="display ${winnerSide === 'boere' ? 'accent-text' : ''}">${standing.boere}</span>
+          <span class="caption ${winnerSide === 'boere' ? 'winner-label' : 'subtext'}">Boere Republic</span>
+        </div>
         <span class="h2 subtext">${tied ? 'Tied' : 'vs'}</span>
-        <span class="score british-text">${standing.british}</span>
-      </div>
-      <div class="standing-labels">
-        <span class="caption boere-text">Boere</span>
-        <span class="caption british-text">British</span>
+        <div class="standing-col">
+          <span class="emblem-wrap sm"><img src="assets/team/british_emblem_512.png" alt="" /></span>
+          <span class="display ${winnerSide === 'british' ? 'accent-text' : ''}">${standing.british}</span>
+          <span class="caption ${winnerSide === 'british' ? 'winner-label' : 'subtext'}">British Empire</span>
+        </div>
       </div>
     </div>
 
@@ -172,67 +194,108 @@ function renderCurrentTab() {
 // Stats tab
 // ---------------------------------------------------------------------------
 
+function compareRowHtml(leftHtml, rightHtml) {
+  return `
+    <div class="compare-row">
+      <div class="compare-col">${leftHtml}</div>
+      <div class="compare-divider"></div>
+      <div class="compare-col">${rightHtml}</div>
+    </div>
+  `;
+}
+
+function statRowHtml(icon, title, boereValue, britishValue, winner) {
+  return `
+    <div class="stat-row-header"><span>${icon}</span><span class="caption subtext">${title}</span></div>
+    ${compareRowHtml(
+      `<span class="body-strong ${winner === 'boere' ? 'accent-text' : ''}">${boereValue}</span>`,
+      `<span class="body-strong ${winner === 'british' ? 'accent-text' : ''}">${britishValue}</span>`,
+    )}
+  `;
+}
+
+function statGroupCardHtml(rows) {
+  return `<div class="card">${rows.map((r, i) => (i > 0 ? '<div class="row-divider"></div>' : '') + statRowHtml(r.icon, r.title, r.boereValue, r.britishValue, r.winner)).join('')}</div>`;
+}
+
+function recordPyramidHtml(record, emphasize) {
+  return `
+    <div class="pyramid">
+      <span class="display ${emphasize ? 'accent-text' : ''}">${record.wins}</span>
+      <div class="pyramid-row">
+        <span class="small-strong subtext">L ${record.losses}</span>
+        <span class="small-strong subtext">D ${record.draws}</span>
+      </div>
+    </div>
+  `;
+}
+
 function renderTeamsStats() {
   const stats = computeTeamStats(state.data.tournaments);
   const { boere, british } = stats;
-  const fbSg = (t) => `FB ${t.fourBall.winPct.toFixed(0)}%  ·  SG ${t.singles.winPct.toFixed(0)}%`;
   const streakStr = (n) => n > 0 ? `${n} win${n > 1 ? 's' : ''}` : '—';
+  const recordWinner = betterOf(boere.record.wins, british.record.wins);
+
   return `
     <div class="card">
       <div class="emblem-row">
         <div class="emblem-col">
-          <img class="emblem" src="assets/team/boere_emblem_512.png" alt="Boere emblem" />
-          <div class="small-strong boere-text">The Boere</div>
+          <span class="emblem-wrap"><img src="assets/team/boere_emblem_512.png" alt="" /></span>
+          <div class="small-strong">${teamLabel('boere').toUpperCase()}</div>
         </div>
         <div class="h2 subtext">vs</div>
         <div class="emblem-col">
-          <img class="emblem" src="assets/team/british_emblem_512.png" alt="British emblem" />
-          <div class="small-strong british-text">The British</div>
+          <span class="emblem-wrap"><img src="assets/team/british_emblem_512.png" alt="" /></span>
+          <div class="small-strong">${teamLabel('british').toUpperCase()}</div>
         </div>
       </div>
     </div>
-    <div class="card">
-      <div class="caption subtext center-text">Record (W-L-D)</div>
-      <div class="compare-row">
-        <span class="body-strong boere-text">${boere.record.wins}-${boere.record.losses}-${boere.record.draws}</span>
-        <span class="body-strong british-text">${british.record.wins}-${british.record.losses}-${british.record.draws}</span>
-      </div>
+
+    <div class="card record-card">
+      <div class="record-title">🏆<span class="h2">RECORD</span></div>
+      ${compareRowHtml(recordPyramidHtml(boere.record, recordWinner === 'boere'), recordPyramidHtml(british.record, recordWinner === 'british'))}
     </div>
-    <div class="card">
-      <div class="caption subtext center-text">Points For / Against</div>
-      <div class="compare-row">
-        <span class="body-strong boere-text">${boere.pointsFor} / ${boere.pointsAgainst}</span>
-        <span class="body-strong british-text">${british.pointsFor} / ${british.pointsAgainst}</span>
-      </div>
-    </div>
-    <div class="card">
-      <div class="caption subtext center-text">Biggest Tournament Win Margin</div>
-      <div class="compare-row">
-        <span class="body-strong boere-text">${boere.biggestWinMargin !== null ? boere.biggestWinMargin : '—'}</span>
-        <span class="body-strong british-text">${british.biggestWinMargin !== null ? british.biggestWinMargin : '—'}</span>
-      </div>
-    </div>
-    <div class="card">
-      <div class="caption subtext center-text">Current Streak</div>
-      <div class="compare-row">
-        <span class="body-strong boere-text">${streakStr(boere.currentStreak)}</span>
-        <span class="body-strong british-text">${streakStr(british.currentStreak)}</span>
-      </div>
-    </div>
-    <div class="card">
-      <div class="caption subtext center-text">Best Streak</div>
-      <div class="compare-row">
-        <span class="body-strong boere-text">${streakStr(boere.bestStreak)}</span>
-        <span class="body-strong british-text">${streakStr(british.bestStreak)}</span>
-      </div>
-    </div>
-    <div class="card">
-      <div class="caption subtext center-text">Four-ball vs Singles</div>
-      <div class="compare-row">
-        <span class="body-strong boere-text">${fbSg(boere)}</span>
-        <span class="body-strong british-text">${fbSg(british)}</span>
-      </div>
-    </div>
+
+    ${statGroupCardHtml([
+      {
+        icon: '📊', title: 'POINTS FOR / AGAINST',
+        boereValue: `${boere.pointsFor} / ${boere.pointsAgainst}`,
+        britishValue: `${british.pointsFor} / ${british.pointsAgainst}`,
+        winner: betterOf(boere.pointsFor, british.pointsFor),
+      },
+      {
+        icon: '⚡', title: 'BIGGEST TOURNAMENT WIN MARGIN',
+        boereValue: boere.biggestWinMargin !== null ? boere.biggestWinMargin : '—',
+        britishValue: british.biggestWinMargin !== null ? british.biggestWinMargin : '—',
+        winner: betterMargin(boere.biggestWinMargin, british.biggestWinMargin),
+      },
+    ])}
+
+    ${statGroupCardHtml([
+      {
+        icon: '🔥', title: 'CURRENT STREAK',
+        boereValue: streakStr(boere.currentStreak), britishValue: streakStr(british.currentStreak),
+        winner: betterOf(boere.currentStreak, british.currentStreak),
+      },
+      {
+        icon: '🎗️', title: 'BEST STREAK',
+        boereValue: streakStr(boere.bestStreak), britishValue: streakStr(british.bestStreak),
+        winner: betterOf(boere.bestStreak, british.bestStreak),
+      },
+    ])}
+
+    ${statGroupCardHtml([
+      {
+        icon: '👥', title: 'FOUR-BALL',
+        boereValue: `${boere.fourBall.winPct.toFixed(0)}%`, britishValue: `${british.fourBall.winPct.toFixed(0)}%`,
+        winner: betterOf(boere.fourBall.winPct, british.fourBall.winPct),
+      },
+      {
+        icon: '👤', title: 'SINGLES',
+        boereValue: `${boere.singles.winPct.toFixed(0)}%`, britishValue: `${british.singles.winPct.toFixed(0)}%`,
+        winner: betterOf(boere.singles.winPct, british.singles.winPct),
+      },
+    ])}
   `;
 }
 
@@ -256,7 +319,7 @@ function playerTableHeaderHtml() {
   `;
 }
 
-function playerRowHtml(player, s, rankLabel, displayWinPct) {
+function playerRowHtml(player, s, rankLabel, displayWinPct, alt) {
   const team = s.mostRecentTeam;
   const pct = displayWinPct !== undefined ? displayWinPct : Math.round(s.winPct * 10) / 10;
   const fmt = r => `${r.wins}-${r.losses}-${r.draws}`;
@@ -264,22 +327,22 @@ function playerRowHtml(player, s, rankLabel, displayWinPct) {
   const expanded = state.expandedPlayerIds.has(s.playerId);
   return `
     <div class="pt-wrap">
-      <div class="lb-row pt-row" data-action="toggle-player" data-value="${esc(s.playerId)}">
-        <span class="small-strong subtext lb-pos" style="color:var(--accent)">${esc(rankLabel ?? '—')}</span>
+      <div class="lb-row pt-row ${alt ? 'alt' : ''}" data-action="toggle-player" data-value="${esc(s.playerId)}">
+        <span class="lb-pos"><span class="small-strong accent-text rank-pill">${esc(rankLabel ?? '—')}</span></span>
         <span class="lb-icon">${team ? playerIcon(player, team) : ''}</span>
-        <span class="body lb-name">${esc(playerFullName(player))}</span>
+        <span class="body lb-name">${esc(player.firstName)}</span>
         <span class="small pt-record">${fmt(record)}</span>
-        <span class="small-strong ${team ? team + '-text' : ''} pt-pct">${pct.toFixed(1)}%</span>
+        <span class="small-strong accent-text pt-pct">${pct.toFixed(1)}%</span>
         <span class="chev">${expanded ? '⌃' : '⌄'}</span>
       </div>
       ${expanded ? `
         <div class="stat-grid pt-detail">
-          <div class="stat-cell"><div class="caption label">Tournaments</div><div class="value body-strong">${s.tournamentsPlayed}</div></div>
-          <div class="stat-cell"><div class="caption label">Team Results</div><div class="value body-strong">${fmt(s.teamResults)}</div></div>
-          <div class="stat-cell"><div class="caption label">Four-Ball</div><div class="value body-strong">${fmt(s.fourBall)}</div></div>
-          <div class="stat-cell"><div class="caption label">Matchplay</div><div class="value body-strong">${fmt(s.singles)}</div></div>
-          <div class="stat-cell"><div class="caption label">Points For</div><div class="value body-strong">${s.pointsFor}</div></div>
-          <div class="stat-cell"><div class="caption label">Points Against</div><div class="value body-strong">${s.pointsAgainst}</div></div>
+          <div class="stat-cell"><div class="caption label">TRN</div><div class="value body-strong">${s.tournamentsPlayed}</div></div>
+          <div class="stat-cell"><div class="caption label">TEAM</div><div class="value body-strong">${fmt(s.teamResults)}</div></div>
+          <div class="stat-cell"><div class="caption label">4-BALL</div><div class="value body-strong">${fmt(s.fourBall)}</div></div>
+          <div class="stat-cell"><div class="caption label">SINGLES</div><div class="value body-strong">${fmt(s.singles)}</div></div>
+          <div class="stat-cell"><div class="caption label">PF</div><div class="value body-strong">${s.pointsFor}</div></div>
+          <div class="stat-cell"><div class="caption label">PA</div><div class="value body-strong">${s.pointsAgainst}</div></div>
         </div>
       ` : ''}
     </div>
@@ -291,10 +354,10 @@ function renderPlayersStats() {
   const { ranked, insufficient } = rankPlayers(all);
   const byId = id => state.data.players.find(p => p.id === id);
 
-  const rankedHtml = `<div class="card lb-card">${playerTableHeaderHtml()}${ranked.map(r => playerRowHtml(byId(r.playerId), r, r.rankLabel, r.displayWinPct)).join('')}</div>`;
+  const rankedHtml = `<div class="card lb-card">${playerTableHeaderHtml()}${ranked.map((r, i) => playerRowHtml(byId(r.playerId), r, r.rankLabel, r.displayWinPct, i % 2 === 1)).join('')}</div>`;
   const insufficientHtml = insufficient.length
     ? `<div class="caption subtext section-title">Insufficient tournaments (min. 2)</div>` +
-      `<div class="card lb-card">${playerTableHeaderHtml()}${insufficient.map(s => playerRowHtml(byId(s.playerId), s)).join('')}</div>`
+      `<div class="card lb-card">${playerTableHeaderHtml()}${insufficient.map((s, i) => playerRowHtml(byId(s.playerId), s, undefined, undefined, i % 2 === 1)).join('')}</div>`
     : '';
 
   return rankedHtml + insufficientHtml;
@@ -349,15 +412,26 @@ function renderHistoricalTab() {
 
   const rows = older.map(t => {
     const standing = computeStanding(t);
+    const winner = standing.boere > standing.british ? 'boere' : standing.british > standing.boere ? 'british' : null;
     return `
       <div class="card list-row" data-action="select-past" data-value="${esc(t.id)}">
         <div class="info">
           <span class="body-strong">${esc(t.name)}</span>
           <span class="small subtext">${t.courses.day1 === t.courses.day2 ? esc(t.courses.day1) : esc(t.courses.day1) + ' · ' + esc(t.courses.day2)}</span>
         </div>
-        <span class="body-strong boere-text">${standing.boere}</span>
-        <span class="small subtext">–</span>
-        <span class="body-strong british-text">${standing.british}</span>
+        <div class="row-right">
+          <div class="score-col">
+            <span class="emblem-wrap xs"><img src="assets/team/boere_emblem_512.png" alt="" /></span>
+            <span class="body-strong">${standing.boere}</span>
+            <span class="caption ${winner === 'boere' ? 'accent-text' : 'subtext'}">BOERE</span>
+          </div>
+          <span class="small subtext">–</span>
+          <div class="score-col">
+            <span class="emblem-wrap xs"><img src="assets/team/british_emblem_512.png" alt="" /></span>
+            <span class="body-strong">${standing.british}</span>
+            <span class="caption ${winner === 'british' ? 'accent-text' : 'subtext'}">BRIT</span>
+          </div>
+        </div>
         <span class="chev">›</span>
       </div>
     `;
