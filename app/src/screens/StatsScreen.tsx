@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Animated, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Image, StyleSheet, Text, View } from 'react-native';
 import Screen from '../components/Screen';
 import Card from '../components/Card';
 import SegmentedControl from '../components/SegmentedControl';
@@ -7,7 +7,7 @@ import TeamEmblem from '../components/TeamEmblem';
 import PlayerStatsRow, { PlayerTableHeader } from '../components/PlayerStatsTable';
 import { useApp } from '../services/AppContext';
 import { useAnimatedTab } from '../hooks/useAnimatedTab';
-import { computeAllPlayerStats, computeTeamStats, rankPlayers, TeamStats } from '../services/stats';
+import { computeAllPlayerStats, computeTeamStats, rankPlayers, TeamRecord, TeamStats } from '../services/stats';
 import { TeamId } from '../models';
 import { colors, spacing, teamLabel, type } from '../theme';
 
@@ -46,6 +46,10 @@ export default function StatsScreen() {
 
   return (
     <Screen onRefresh={refresh} refreshing={refreshing} title="Stats">
+      <View style={styles.banner}>
+        <Image source={require('../../assets/icon.png')} style={styles.bannerLogo} />
+        <Text style={[type.h2, styles.text]}>Anglo Boer War Golf Tour</Text>
+      </View>
       <SegmentedControl options={SUB_TABS} value={tab} onChange={setTabAnimated} />
       {endedCount === 0 ? (
         <Card>
@@ -98,6 +102,31 @@ function StatCard({
   );
 }
 
+function RecordPyramid({ record, emphasize }: { record: TeamRecord; emphasize: boolean }) {
+  return (
+    <View style={styles.pyramid}>
+      <Text style={[type.display, emphasize ? { color: colors.accent } : styles.text]}>{record.wins}</Text>
+      <View style={styles.pyramidRow}>
+        <Text style={[type.smallStrong, styles.subtext]}>L {record.losses}</Text>
+        <Text style={[type.smallStrong, styles.subtext]}>D {record.draws}</Text>
+      </View>
+    </View>
+  );
+}
+
+function RecordCard({ boere, british }: { boere: TeamStats; british: TeamStats }) {
+  const winner = betterOf(boere.record.wins, british.record.wins);
+  return (
+    <Card style={styles.recordCard} elevated>
+      <Text style={[type.h2, styles.text, styles.centerText]}>RECORD</Text>
+      <SplitRow
+        left={<RecordPyramid record={boere.record} emphasize={winner === 'boere'} />}
+        right={<RecordPyramid record={british.record} emphasize={winner === 'british'} />}
+      />
+    </Card>
+  );
+}
+
 function streakLabel(n: number): string {
   return n > 0 ? `${n} win${n > 1 ? 's' : ''}` : '—';
 }
@@ -138,12 +167,7 @@ function TeamsTab({ tournaments }: { tournaments: import('../models').Tournament
         />
       </Card>
 
-      <StatCard
-        title="RECORD (W-L-D)"
-        boereValue={`${boere.record.wins}-${boere.record.losses}-${boere.record.draws}`}
-        britishValue={`${british.record.wins}-${british.record.losses}-${british.record.draws}`}
-        winner={betterOf(boere.record.wins, british.record.wins)}
-      />
+      <RecordCard boere={boere} british={british} />
 
       <StatCard
         title="POINTS FOR / AGAINST"
@@ -235,4 +259,9 @@ const styles = StyleSheet.create({
   splitDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch', backgroundColor: colors.border, marginVertical: spacing.xs },
   sectionTitle: { paddingHorizontal: spacing.xs },
   tableCard: { padding: spacing.sm, gap: 0 },
+  banner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  bannerLogo: { width: 40, height: 40, borderRadius: 8 },
+  recordCard: { borderColor: colors.accentMuted, borderWidth: 1.5 },
+  pyramid: { alignItems: 'center', gap: 2 },
+  pyramidRow: { flexDirection: 'row', gap: spacing.md },
 });

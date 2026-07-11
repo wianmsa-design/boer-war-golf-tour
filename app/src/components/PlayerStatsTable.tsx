@@ -25,7 +25,7 @@ export function PlayerTableHeader() {
       <View style={styles.colIcon} />
       <Text style={[type.caption, styles.subtext, styles.colName]}>PLAYER</Text>
       <Text style={[type.caption, styles.subtext, styles.colRecord]}>W-L-D</Text>
-      <Text style={[type.caption, styles.subtext, styles.colPct]}>WIN%</Text>
+      <Text style={[type.caption, styles.subtext, styles.colPct, styles.noLetterSpacing]}>WIN%</Text>
       <View style={styles.colChevron} />
     </View>
   );
@@ -63,8 +63,8 @@ export default function PlayerStatsRow({ player, stats, rankLabel, displayWinPct
         <View style={styles.detail}>
           <Stat label="TRN" value={`${stats.tournamentsPlayed}`} />
           <Stat label="TEAM" value={fmtRecord(stats.teamResults)} />
-          <Stat label="Four-Ball" value={fmtRecord(stats.fourBall)} />
-          <Stat label="Singles" value={fmtRecord(stats.singles)} />
+          <Stat label="4-BALL" value={fmtRecord(stats.fourBall)} />
+          <Stat label="SINGLES" value={fmtRecord(stats.singles)} />
           <Stat label="PF" value={`${stats.pointsFor}`} />
           <Stat label="PA" value={`${stats.pointsAgainst}`} />
         </View>
@@ -106,7 +106,8 @@ const styles = StyleSheet.create({
   colIcon: { width: 24, alignItems: 'center' },
   colName: { flex: 1, textAlign: 'left' },
   colRecord: { width: 56, textAlign: 'center' },
-  colPct: { width: 52, textAlign: 'right' },
+  colPct: { width: 52, textAlign: 'center' },
+  noLetterSpacing: { letterSpacing: 0 },
   colChevron: { width: 16, alignItems: 'center' },
   detail: {
     flexDirection: 'row',
