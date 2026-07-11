@@ -50,7 +50,7 @@ export default function Screen({ children, title, onRefresh, refreshing, scroll 
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  title: { ...type.h1, color: colors.text, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.sm },
+  title: { ...type.h1, textAlign: 'left', color: colors.text, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.sm },
   content: { padding: spacing.lg, paddingBottom: spacing.huge, gap: spacing.lg },
   flexContent: { flex: 1 },
 });

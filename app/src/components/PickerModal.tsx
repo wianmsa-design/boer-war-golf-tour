@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   },
   rowDisabled: { opacity: 0.4 },
   rowText: { flex: 1 },
-  text: { color: colors.text },
-  subtext: { color: colors.subtext },
+  text: { color: colors.text, textAlign: 'left' },
+  subtext: { color: colors.subtext, textAlign: 'left' },
   empty: { textAlign: 'center', paddingVertical: spacing.xl },
 });

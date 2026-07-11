@@ -45,15 +45,18 @@ export const radius = {
   pill: 999,
 } as const;
 
+// Default text alignment is centre app-wide. Screens with scannable lists
+// (leaderboards, roster/tournament lists), the page title, and the tournament
+// settings forms explicitly override back to 'left' at their own call sites.
 export const type = {
-  display: { fontSize: 32, fontWeight: '800' as const, letterSpacing: -0.5 },
-  h1: { fontSize: 24, fontWeight: '700' as const, letterSpacing: -0.3 },
-  h2: { fontSize: 18, fontWeight: '700' as const, letterSpacing: -0.1 },
-  body: { fontSize: 15, fontWeight: '400' as const },
-  bodyStrong: { fontSize: 15, fontWeight: '600' as const },
-  small: { fontSize: 13, fontWeight: '400' as const },
-  smallStrong: { fontSize: 13, fontWeight: '700' as const },
-  caption: { fontSize: 11, fontWeight: '600' as const, letterSpacing: 0.4 },
+  display: { fontSize: 32, fontWeight: '800' as const, letterSpacing: -0.5, textAlign: 'center' as const },
+  h1: { fontSize: 24, fontWeight: '700' as const, letterSpacing: -0.3, textAlign: 'center' as const },
+  h2: { fontSize: 18, fontWeight: '700' as const, letterSpacing: -0.1, textAlign: 'center' as const },
+  body: { fontSize: 15, fontWeight: '400' as const, textAlign: 'center' as const },
+  bodyStrong: { fontSize: 15, fontWeight: '600' as const, textAlign: 'center' as const },
+  small: { fontSize: 13, fontWeight: '400' as const, textAlign: 'center' as const },
+  smallStrong: { fontSize: 13, fontWeight: '700' as const, textAlign: 'center' as const },
+  caption: { fontSize: 11, fontWeight: '600' as const, letterSpacing: 0.4, textAlign: 'center' as const },
 } as const;
 
 export function teamLabel(team: 'boere' | 'british'): string {

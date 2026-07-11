@@ -21,7 +21,7 @@ export default function TextField({ label, style, ...rest }: Props) {
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.xs },
-  label: { color: colors.subtext },
+  label: { color: colors.subtext, textAlign: 'left' },
   input: {
     backgroundColor: colors.surfaceAlt,
     borderRadius: radius.sm,
@@ -29,5 +29,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     color: colors.text,
     ...type.body,
+    textAlign: 'left',
   },
 });

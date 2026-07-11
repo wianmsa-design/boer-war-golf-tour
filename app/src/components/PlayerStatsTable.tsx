@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   subtext: { color: colors.subtext },
   colPos: { width: 28, textAlign: 'center' },
   colIcon: { width: 24, alignItems: 'center' },
-  colName: { flex: 1 },
+  colName: { flex: 1, textAlign: 'left' },
   colRecord: { width: 56, textAlign: 'center' },
   colPct: { width: 52, textAlign: 'right' },
   colChevron: { width: 16, alignItems: 'center' },

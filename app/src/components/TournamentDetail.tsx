@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   },
   lbPos: { width: 24, textAlign: 'center' },
   lbIcon: { width: 32, alignItems: 'center' },
-  lbName: { flex: 1 },
+  lbName: { flex: 1, textAlign: 'left' },
   lbHcp: { width: 40, textAlign: 'center' },
   lbPts: { width: 36, textAlign: 'center' },
 });

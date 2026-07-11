@@ -19,19 +19,41 @@ type DayTab = typeof DAY_TABS[number];
 type ModeTab = 'Match Setup' | 'Score Entry';
 
 const endPromptKey = (tournamentId: string) => `endPrompted:${tournamentId}`;
+const day1SubmittedKey = (tournamentId: string) => `day1Submitted:${tournamentId}`;
+const day2SubmittedKey = (tournamentId: string) => `day2Submitted:${tournamentId}`;
 
 export default function ScoreEntryScreen() {
   const { data, loading, refreshing, error, refresh, endTournament } = useApp();
   const [day, setDay] = useState<DayTab>('Day 1 · Team');
   const [mode, setMode] = useState<ModeTab>('Match Setup');
+  const [day1Submitted, setDay1Submitted] = useState(false);
+  const [day2Submitted, setDay2Submitted] = useState(false);
   const { panHandlers, animStyle, setTabAnimated } = useAnimatedTab(DAY_TABS, day, setDay);
 
   const tournament = data ? getTournament(data.tournaments, data.currentTournamentId) : undefined;
   const active = tournament && tournament.status === 'active' ? tournament : undefined;
   const fullyDecided = active ? isFullyDecided(active) : false;
+  const bothDaysSubmitted = day1Submitted && day2Submitted;
 
   useEffect(() => {
-    if (!active || !fullyDecided) return;
+    if (!active) return;
+    let cancelled = false;
+    (async () => {
+      const [d1, d2] = await Promise.all([
+        AsyncStorage.getItem(day1SubmittedKey(active.id)),
+        AsyncStorage.getItem(day2SubmittedKey(active.id)),
+      ]);
+      if (cancelled) return;
+      setDay1Submitted(!!d1);
+      setDay2Submitted(!!d2);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [active?.id]);
+
+  useEffect(() => {
+    if (!active || !fullyDecided || !bothDaysSubmitted) return;
     let cancelled = false;
     (async () => {
       const key = endPromptKey(active.id);
@@ -40,7 +62,7 @@ export default function ScoreEntryScreen() {
       await AsyncStorage.setItem(key, '1');
       Alert(
         'End tournament?',
-        `Every match has a result. Lock in the final result for ${active.name}? This moves it to Historical and feeds all-time Stats.`,
+        `Every match has a result and both days have been submitted. Lock in the final result for ${active.name}? This moves it to Historical and feeds all-time Stats.`,
         () => endTournament(active.id),
       );
     })();
@@ -48,7 +70,7 @@ export default function ScoreEntryScreen() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active?.id, fullyDecided]);
+  }, [active?.id, fullyDecided, bothDaysSubmitted]);
 
   if (loading && !data) {
     return (
@@ -98,6 +120,16 @@ export default function ScoreEntryScreen() {
     );
   };
 
+  const markDay1Submitted = () => {
+    setDay1Submitted(true);
+    AsyncStorage.setItem(day1SubmittedKey(active.id), '1');
+  };
+
+  const markDay2Submitted = () => {
+    setDay2Submitted(true);
+    AsyncStorage.setItem(day2SubmittedKey(active.id), '1');
+  };
+
   return (
     <Screen onRefresh={refresh} refreshing={refreshing} title="Score Entry">
       <Card>
@@ -113,12 +145,12 @@ export default function ScoreEntryScreen() {
           mode === 'Match Setup' ? (
             <Day1Setup tournament={active} />
           ) : (
-            <Day1Scoring tournament={active} />
+            <Day1Scoring tournament={active} onSubmitted={markDay1Submitted} />
           )
         ) : mode === 'Match Setup' ? (
           <Day2Setup tournament={active} />
         ) : (
-          <Day2Scoring tournament={active} />
+          <Day2Scoring tournament={active} onSubmitted={markDay2Submitted} />
         )}
       </Animated.View>
 
@@ -348,15 +380,16 @@ function ScorePicker({ score, onChange }: { score: MatchScore | null; onChange: 
   );
 }
 
-function handleSubmitDay(dayLabel: string, allDecided: boolean) {
+function handleSubmitDay(dayLabel: string, allDecided: boolean, onSubmitted: () => void) {
   if (allDecided) {
     InfoAlert(`${dayLabel} scores submitted`, `All ${dayLabel} results have been saved.`);
+    onSubmitted();
   } else {
     InfoAlert('Not all matches are complete', "What you've entered so far is already saved — finish the rest when you're ready.");
   }
 }
 
-function Day1Scoring({ tournament }: { tournament: Tournament }) {
+function Day1Scoring({ tournament, onSubmitted }: { tournament: Tournament; onSubmitted: () => void }) {
   const { data, setDay1Result } = useApp();
   if (!data) return null;
   const allDecided = tournament.matches.day1.every(m => m.result !== null);
@@ -374,12 +407,12 @@ function Day1Scoring({ tournament }: { tournament: Tournament }) {
           onSetResult={(result, score) => setDay1Result(tournament.id, i, result, score)}
         />
       ))}
-      <Button label="Submit Day 1 Scores" onPress={() => handleSubmitDay('Day 1', allDecided)} />
+      <Button label="Submit Day 1 Scores" onPress={() => handleSubmitDay('Day 1', allDecided, onSubmitted)} />
     </View>
   );
 }
 
-function Day2Scoring({ tournament }: { tournament: Tournament }) {
+function Day2Scoring({ tournament, onSubmitted }: { tournament: Tournament; onSubmitted: () => void }) {
   const { data, setDay2Result } = useApp();
   if (!data) return null;
   const allDecided = tournament.matches.day2.every(m => m.result !== null);
@@ -397,7 +430,7 @@ function Day2Scoring({ tournament }: { tournament: Tournament }) {
           onSetResult={(result, score) => setDay2Result(tournament.id, i, result, score)}
         />
       ))}
-      <Button label="Submit Day 2 Scores" onPress={() => handleSubmitDay('Day 2', allDecided)} />
+      <Button label="Submit Day 2 Scores" onPress={() => handleSubmitDay('Day 2', allDecided, onSubmitted)} />
     </View>
   );
 }

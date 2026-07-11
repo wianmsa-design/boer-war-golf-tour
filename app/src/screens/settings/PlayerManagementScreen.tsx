@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
   gap: { gap: spacing.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   rowText: { flex: 1, gap: 2 },
-  text: { color: colors.text },
-  subtext: { color: colors.subtext },
+  text: { color: colors.text, textAlign: 'left' },
+  subtext: { color: colors.subtext, textAlign: 'left' },
   iconBtn: { padding: spacing.xs },
   backdrop: { flex: 1, backgroundColor: colors.dimmed, justifyContent: 'flex-end' },
   sheet: {

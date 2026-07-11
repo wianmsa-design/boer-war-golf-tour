@@ -98,8 +98,8 @@ function PastTournamentRow({ tournament, onPress }: { tournament: Tournament; on
     <Pressable onPress={onPress}>
       <Card style={styles.row}>
         <View style={styles.rowLeft}>
-          <Text style={[type.bodyStrong, styles.text]}>{tournament.name}</Text>
-          <Text style={[type.small, styles.subtext]}>
+          <Text style={[type.bodyStrong, styles.text, styles.leftText]}>{tournament.name}</Text>
+          <Text style={[type.small, styles.subtext, styles.leftText]}>
             {tournament.courses.day1 === tournament.courses.day2
               ? tournament.courses.day1
               : `${tournament.courses.day1} · ${tournament.courses.day2}`}
@@ -132,6 +132,7 @@ const styles = StyleSheet.create({
   backRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingVertical: spacing.xs },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   rowLeft: { flex: 1, gap: 2 },
+  leftText: { textAlign: 'left' },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   scoreCol: { alignItems: 'center', gap: 1 },
 });

@@ -381,8 +381,8 @@ function EditTournamentForm({ tournamentId }: { tournamentId: string }) {
 const styles = StyleSheet.create({
   gap: { gap: spacing.lg },
   fieldGap: { gap: spacing.xs },
-  text: { color: colors.text },
-  subtext: { color: colors.subtext },
+  text: { color: colors.text, textAlign: 'left' },
+  subtext: { color: colors.subtext, textAlign: 'left' },
   coursePicker: {
     flexDirection: 'row',
     justifyContent: 'space-between',

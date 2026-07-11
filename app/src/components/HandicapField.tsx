@@ -37,7 +37,6 @@ export default function HandicapField({ value, onChange }: Props) {
 const styles = StyleSheet.create({
   input: {
     width: 52,
-    textAlign: 'center',
     backgroundColor: colors.surfaceAlt,
     borderRadius: radius.sm,
     paddingVertical: 6,
@@ -45,6 +44,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
     ...type.smallStrong,
+    textAlign: 'center',
   },
   invalid: {
     borderColor: colors.danger,
