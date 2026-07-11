@@ -278,7 +278,7 @@ function renderTeamsStats() {
         winner: betterOf(boere.currentStreak, british.currentStreak),
       },
       {
-        icon: '🎗️', title: 'BEST STREAK',
+        icon: '🏅', title: 'BEST STREAK',
         boereValue: streakStr(boere.bestStreak), britishValue: streakStr(british.bestStreak),
         winner: betterOf(boere.bestStreak, british.bestStreak),
       },

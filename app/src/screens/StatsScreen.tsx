@@ -211,7 +211,7 @@ function TeamsTab({ tournaments }: { tournaments: import('../models').Tournament
             winner: betterOf(boere.currentStreak, british.currentStreak),
           },
           {
-            icon: 'ribbon-outline',
+            icon: 'medal-outline',
             title: 'BEST STREAK',
             boereValue: streakLabel(boere.bestStreak),
             britishValue: streakLabel(british.bestStreak),
