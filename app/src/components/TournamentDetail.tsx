@@ -147,9 +147,9 @@ function MatchRow({
     <View style={styles.matchRow}>
       <Text style={[type.caption, styles.subtext, styles.center]}>{label}</Text>
       <View style={styles.matchPlayers}>
-        <Text style={[type.body, result === 'boere' ? { color: colors.accent } : styles.text]} numberOfLines={1}>{boere}</Text>
+        <Text style={[result === 'boere' ? type.bodyStrong : type.body, result === 'boere' ? { color: colors.accent } : styles.text]} numberOfLines={1}>{boere}</Text>
         <Text style={[type.small, styles.subtext]}>vs</Text>
-        <Text style={[type.body, result === 'british' ? { color: colors.accent } : styles.text]} numberOfLines={1}>{british}</Text>
+        <Text style={[result === 'british' ? type.bodyStrong : type.body, result === 'british' ? { color: colors.accent } : styles.text]} numberOfLines={1}>{british}</Text>
       </View>
       <Text style={[type.small, decided ? styles.text : styles.subtext, styles.center]}>{outcome}</Text>
     </View>
