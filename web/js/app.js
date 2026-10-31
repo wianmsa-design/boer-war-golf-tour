@@ -31,6 +31,33 @@ function esc(str) {
   return div.innerHTML;
 }
 
+const ICON_PATHS = {
+  trophy: '<path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/>',
+  chart: '<path d="M3 3v18h18"/><path d="M7 15v3M12 9v9M17 5v13"/>',
+  bolt: '<path d="M13 2 4 14h6l-1 8 10-12h-6l0-8Z"/>',
+  flame: '<path d="M12 22a7 7 0 0 0 7-7c0-4-3-6-4-9-1-2-1-3 0-4-4 1-6 4-6 7 0 1 1 2 2 2 1 0 1-1 1-2 1 1 1 2 1 3 0 2-2 2-2 5a3 3 0 0 0 3 3"/>',
+  medal: '<circle cx="12" cy="9" r="5"/><path d="m8 14-2 8 6-3 6 3-2-8"/>',
+  users: '<circle cx="9" cy="8" r="3"/><path d="M3 21v-1a6 6 0 0 1 12 0v1M16 5a3 3 0 0 1 0 6M17 21v-1a6 6 0 0 0-3-5"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M5 21v-1a7 7 0 0 1 14 0v1"/>',
+};
+
+function icon(name) {
+  return `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[name]}</svg>`;
+}
+
+function pageHeader(title, subtitle) {
+  return `
+    <div class="page-header">
+      <div class="page-title">${esc(title)}</div>
+      <div class="page-tagline">${esc(subtitle)}</div>
+    </div>
+  `;
+}
+
+function sectionHeadHtml(title) {
+  return `<div class="section-head"><span class="caption subtext">${title}</span><span class="section-rule"></span></div>`;
+}
+
 async function load() {
   state.error = null;
   render();
@@ -86,18 +113,33 @@ function tournamentDetailHtml(tournament, players) {
   const sameCourse = tournament.courses.day1 === tournament.courses.day2;
   const tied = standing.boere === standing.british && tournament.status === 'ended';
   const winnerSide = standing.boere > standing.british ? 'boere' : standing.british > standing.boere ? 'british' : null;
-
-  const matchRow = (m, boereLabel, britishLabel) => `
-    <div class="match-row">
-      <div class="caption subtext">Match ${m.match}</div>
-      <div class="match-players">
-        <span class="body ${m.result === 'boere' ? 'body-strong winner-label' : ''}">${boereLabel}</span>
-        <span class="small subtext">vs</span>
-        <span class="body ${m.result === 'british' ? 'body-strong winner-label' : ''}">${britishLabel}</span>
-      </div>
-      <div class="small ${m.result !== null ? '' : 'subtext'}">${outcomeLabel(m)}</div>
+  const courseLabel = sameCourse
+    ? esc(tournament.courses.day1)
+    : `Day 1 · ${esc(tournament.courses.day1)} &nbsp;·&nbsp; Day 2 · ${esc(tournament.courses.day2)}`;
+  const total = standing.boere + standing.british;
+  const seriesBar = total === 0 ? '' : `
+    <div class="series-bar">
+      <span class="series-seg" style="flex:${standing.boere};background:${winnerSide === 'boere' ? 'var(--accent)' : 'var(--accent-muted)'}"></span>
+      <span class="series-seg" style="flex:${standing.british};background:${winnerSide === 'british' ? 'var(--accent)' : 'var(--accent-muted)'}"></span>
     </div>
   `;
+
+  const matchRow = (m, boereLabel, britishLabel) => {
+    const decided = m.result !== null;
+    return `
+      <div class="match-row">
+        <div class="match-meta">
+          <span class="caption match-no">Match ${m.match}</span>
+          <span class="small ${decided ? '' : 'subtext'}">${outcomeLabel(m)}</span>
+        </div>
+        <div class="match-teams">
+          <span class="body match-team ${m.result === 'boere' ? 'winner-label' : ''}">${boereLabel}</span>
+          <span class="caption match-vs">v</span>
+          <span class="body match-team right ${m.result === 'british' ? 'winner-label' : ''}">${britishLabel}</span>
+        </div>
+      </div>
+    `;
+  };
 
   const day1Rows = tournament.matches.day1.map(m => matchRow(
     m,
@@ -124,7 +166,7 @@ function tournamentDetailHtml(tournament, players) {
     const hcp = entry.handicap !== null ? esc(formatHandicap(entry.handicap)) : '—';
     return `
       <div class="lb-row">
-        <span class="small subtext lb-pos">${i + 1}</span>
+        <span class="lb-pos"><span class="small-strong rank-pill ${i < 3 ? 'top' : ''}">${i + 1}</span></span>
         <span class="lb-icon">${playerIcon(player, entry.team)}</span>
         <span class="body lb-name">${esc(player.firstName)}</span>
         <span class="small subtext lb-hcp">${hcp}</span>
@@ -133,42 +175,48 @@ function tournamentDetailHtml(tournament, players) {
     `;
   }).join('');
 
+  const section = (title, body) => `
+    <div class="section">
+      <div class="section-head"><span class="caption subtext">${title}</span><span class="section-rule"></span></div>
+      ${body}
+    </div>
+  `;
+
   return `
-    <div class="card">
+    <div class="card elevated hero">
+      <div class="eyebrow">${tournament.status === 'ended' ? 'Final result' : 'Matchplay · in progress'}</div>
       <div class="h1">${esc(tournament.name)}</div>
-      <div class="small subtext">${sameCourse ? esc(tournament.courses.day1) : `Day 1: ${esc(tournament.courses.day1)} · Day 2: ${esc(tournament.courses.day2)}`}</div>
+      <div class="small subtext">${courseLabel}</div>
       <div class="standing-row">
         <div class="standing-col">
           <span class="emblem-wrap sm"><img src="assets/team/boere_emblem_512.png" alt="" /></span>
           <span class="display ${winnerSide === 'boere' ? 'accent-text' : ''}">${standing.boere}</span>
           <span class="caption ${winnerSide === 'boere' ? 'winner-label' : 'subtext'}">Boere Republic</span>
         </div>
-        <span class="h2 subtext">${tied ? 'Tied' : 'vs'}</span>
+        <span class="caption subtext standing-vs">${tied ? 'Tied' : 'vs'}</span>
         <div class="standing-col">
           <span class="emblem-wrap sm"><img src="assets/team/british_emblem_512.png" alt="" /></span>
           <span class="display ${winnerSide === 'british' ? 'accent-text' : ''}">${standing.british}</span>
           <span class="caption ${winnerSide === 'british' ? 'winner-label' : 'subtext'}">British Empire</span>
         </div>
       </div>
+      ${seriesBar}
     </div>
 
-    <div class="caption subtext section-title">Day 1 · Four-ball</div>
-    <div class="card">${day1Rows}</div>
-
-    <div class="caption subtext section-title">Day 2 · Singles</div>
-    <div class="card">${day2Rows}</div>
-
-    <div class="caption subtext section-title">Players</div>
-    <div class="card lb-card">
-      <div class="lb-row lb-header">
-        <span class="caption subtext lb-pos">#</span>
-        <span class="lb-icon"></span>
-        <span class="caption subtext lb-name">PLAYER</span>
-        <span class="caption subtext lb-hcp">HCP</span>
-        <span class="caption subtext lb-pts">PTS</span>
+    ${section('Day 1 · Four-ball', `<div class="card section-card">${day1Rows}</div>`)}
+    ${section('Day 2 · Singles', `<div class="card section-card">${day2Rows}</div>`)}
+    ${section('Players', `
+      <div class="card lb-card">
+        <div class="lb-row lb-header">
+          <span class="caption subtext lb-pos">#</span>
+          <span class="lb-icon"></span>
+          <span class="caption subtext lb-name">Player</span>
+          <span class="caption subtext lb-hcp">Hcp</span>
+          <span class="caption subtext lb-pts">Pts</span>
+        </div>
+        ${leaderboardRows}
       </div>
-      ${leaderboardRows}
-    </div>
+    `)}
   `;
 }
 
@@ -204,24 +252,31 @@ function compareRowHtml(leftHtml, rightHtml) {
   `;
 }
 
-function statRowHtml(icon, title, boereValue, britishValue, winner) {
+function statRowHtml(iconName, title, boereValue, britishValue, winner) {
   return `
-    <div class="stat-row-header"><span>${icon}</span><span class="caption subtext">${title}</span></div>
-    ${compareRowHtml(
-      `<span class="body-strong ${winner === 'boere' ? 'accent-text' : ''}">${boereValue}</span>`,
-      `<span class="body-strong ${winner === 'british' ? 'accent-text' : ''}">${britishValue}</span>`,
-    )}
+    <div class="stat-row">
+      <div class="stat-row-header">${icon(iconName)}<span class="caption subtext">${title}</span></div>
+      ${compareRowHtml(
+        `<span class="h2 stat-value ${winner === 'boere' ? 'accent-text' : ''}">${boereValue}</span>`,
+        `<span class="h2 stat-value ${winner === 'british' ? 'accent-text' : ''}">${britishValue}</span>`,
+      )}
+    </div>
   `;
 }
 
-function statGroupCardHtml(rows) {
-  return `<div class="card">${rows.map((r, i) => (i > 0 ? '<div class="row-divider"></div>' : '') + statRowHtml(r.icon, r.title, r.boereValue, r.britishValue, r.winner)).join('')}</div>`;
+function statListHtml(rows) {
+  return `
+    <div class="card stat-list">
+      ${rows.map((r, i) => (i > 0 ? '<div class="stat-row-divider"></div>' : '') + statRowHtml(r.icon, r.title, r.boereValue, r.britishValue, r.winner)).join('')}
+    </div>
+  `;
 }
 
 function recordPyramidHtml(record, emphasize) {
   return `
     <div class="pyramid">
       <span class="display ${emphasize ? 'accent-text' : ''}">${record.wins}</span>
+      <span class="caption subtext">Wins</span>
       <div class="pyramid-row">
         <span class="small-strong subtext">L ${record.losses}</span>
         <span class="small-strong subtext">D ${record.draws}</span>
@@ -237,61 +292,57 @@ function renderTeamsStats() {
   const recordWinner = betterOf(boere.record.wins, british.record.wins);
 
   return `
-    <div class="card">
+    <div class="card series-card">
+      <div class="eyebrow">All-time series</div>
       <div class="emblem-row">
         <div class="emblem-col">
           <span class="emblem-wrap"><img src="assets/team/boere_emblem_512.png" alt="" /></span>
-          <div class="small-strong">${teamLabel('boere').toUpperCase()}</div>
+          <div class="small-strong">${teamLabel('boere')}</div>
         </div>
-        <div class="h2 subtext">vs</div>
+        <div class="caption subtext standing-vs">vs</div>
         <div class="emblem-col">
           <span class="emblem-wrap"><img src="assets/team/british_emblem_512.png" alt="" /></span>
-          <div class="small-strong">${teamLabel('british').toUpperCase()}</div>
+          <div class="small-strong">${teamLabel('british')}</div>
         </div>
       </div>
     </div>
 
-    <div class="card record-card">
-      <div class="record-title">🏆<span class="h2">RECORD</span></div>
+    <div class="card record-card elevated">
+      <div class="card-head">${icon('trophy')}<span class="h2">All-time record</span></div>
       ${compareRowHtml(recordPyramidHtml(boere.record, recordWinner === 'boere'), recordPyramidHtml(british.record, recordWinner === 'british'))}
     </div>
 
-    ${statGroupCardHtml([
+    ${sectionHeadHtml('By the numbers')}
+    ${statListHtml([
       {
-        icon: '📊', title: 'POINTS FOR / AGAINST',
+        icon: 'chart', title: 'Points for / against',
         boereValue: `${boere.pointsFor} / ${boere.pointsAgainst}`,
         britishValue: `${british.pointsFor} / ${british.pointsAgainst}`,
         winner: betterOf(boere.pointsFor, british.pointsFor),
       },
       {
-        icon: '⚡', title: 'BIGGEST TOURNAMENT WIN MARGIN',
+        icon: 'bolt', title: 'Biggest tournament win margin',
         boereValue: boere.biggestWinMargin !== null ? boere.biggestWinMargin : '—',
         britishValue: british.biggestWinMargin !== null ? british.biggestWinMargin : '—',
         winner: betterMargin(boere.biggestWinMargin, british.biggestWinMargin),
       },
-    ])}
-
-    ${statGroupCardHtml([
       {
-        icon: '🔥', title: 'CURRENT STREAK',
+        icon: 'flame', title: 'Current streak',
         boereValue: streakStr(boere.currentStreak), britishValue: streakStr(british.currentStreak),
         winner: betterOf(boere.currentStreak, british.currentStreak),
       },
       {
-        icon: '🏅', title: 'BEST STREAK',
+        icon: 'medal', title: 'Best streak',
         boereValue: streakStr(boere.bestStreak), britishValue: streakStr(british.bestStreak),
         winner: betterOf(boere.bestStreak, british.bestStreak),
       },
-    ])}
-
-    ${statGroupCardHtml([
       {
-        icon: '👥', title: 'FOUR-BALL',
+        icon: 'users', title: 'Four-ball',
         boereValue: `${boere.fourBall.winPct.toFixed(0)}%`, britishValue: `${british.fourBall.winPct.toFixed(0)}%`,
         winner: betterOf(boere.fourBall.winPct, british.fourBall.winPct),
       },
       {
-        icon: '👤', title: 'SINGLES',
+        icon: 'user', title: 'Singles',
         boereValue: `${boere.singles.winPct.toFixed(0)}%`, britishValue: `${british.singles.winPct.toFixed(0)}%`,
         winner: betterOf(boere.singles.winPct, british.singles.winPct),
       },
@@ -310,11 +361,12 @@ function combinedRecord(s) {
 function playerTableHeaderHtml() {
   return `
     <div class="lb-row lb-header">
-      <span class="caption subtext lb-pos">POS</span>
+      <span class="caption subtext lb-pos">Pos</span>
       <span class="lb-icon"></span>
-      <span class="caption subtext lb-name">PLAYER</span>
+      <span class="caption subtext lb-name">Player</span>
       <span class="caption subtext pt-record">W-L-D</span>
-      <span class="caption subtext pt-pct">WIN%</span>
+      <span class="caption subtext pt-pct">Win%</span>
+      <span class="chev"></span>
     </div>
   `;
 }
@@ -325,14 +377,19 @@ function playerRowHtml(player, s, rankLabel, displayWinPct, alt) {
   const fmt = r => `${r.wins}-${r.losses}-${r.draws}`;
   const record = combinedRecord(s);
   const expanded = state.expandedPlayerIds.has(s.playerId);
+  const rankNum = parseInt(String(rankLabel ?? '').replace(/\D/g, ''), 10);
+  const top = !Number.isNaN(rankNum) && rankNum <= 3;
   return `
     <div class="pt-wrap">
       <div class="lb-row pt-row ${alt ? 'alt' : ''}" data-action="toggle-player" data-value="${esc(s.playerId)}">
-        <span class="lb-pos"><span class="small-strong accent-text rank-pill">${esc(rankLabel ?? '—')}</span></span>
+        <span class="lb-pos"><span class="small-strong rank-pill ${top ? 'top' : ''}">${esc(rankLabel ?? '—')}</span></span>
         <span class="lb-icon">${team ? playerIcon(player, team) : ''}</span>
         <span class="body lb-name">${esc(player.firstName)}</span>
         <span class="small pt-record">${fmt(record)}</span>
-        <span class="small-strong accent-text pt-pct">${pct.toFixed(1)}%</span>
+        <span class="pt-pct-cell">
+          <span class="small-strong accent-text">${pct.toFixed(1)}%</span>
+          <span class="pct-track"><span class="pct-fill" style="width:${Math.min(100, Math.max(0, pct))}%"></span></span>
+        </span>
         <span class="chev">${expanded ? '⌃' : '⌄'}</span>
       </div>
       ${expanded ? `
@@ -354,9 +411,10 @@ function renderPlayersStats() {
   const { ranked, insufficient } = rankPlayers(all);
   const byId = id => state.data.players.find(p => p.id === id);
 
-  const rankedHtml = `<div class="card lb-card">${playerTableHeaderHtml()}${ranked.map((r, i) => playerRowHtml(byId(r.playerId), r, r.rankLabel, r.displayWinPct, i % 2 === 1)).join('')}</div>`;
+  const rankedHtml = sectionHeadHtml('Ranked players') +
+    `<div class="card lb-card">${playerTableHeaderHtml()}${ranked.map((r, i) => playerRowHtml(byId(r.playerId), r, r.rankLabel, r.displayWinPct, i % 2 === 1)).join('')}</div>`;
   const insufficientHtml = insufficient.length
-    ? `<div class="caption subtext section-title">Insufficient tournaments (min. 2)</div>` +
+    ? sectionHeadHtml('Insufficient tournaments · min. 2') +
       `<div class="card lb-card">${playerTableHeaderHtml()}${insufficient.map((s, i) => playerRowHtml(byId(s.playerId), s, undefined, undefined, i % 2 === 1)).join('')}</div>`
     : '';
 
@@ -437,7 +495,7 @@ function renderHistoricalTab() {
     `;
   }).join('');
 
-  return sub + rows;
+  return sub + sectionHeadHtml('Past tournaments') + rows;
 }
 
 // ---------------------------------------------------------------------------
@@ -445,11 +503,12 @@ function renderHistoricalTab() {
 // ---------------------------------------------------------------------------
 
 const TAB_TITLES = { stats: 'Stats', current: 'Active Tournament', historical: 'Historical' };
+const TAB_SUBTITLES = { stats: 'All-time record', current: 'Live matchplay', historical: 'Past results' };
 
 function render() {
   if (state.error && !state.data) {
     root.innerHTML = `
-      <div class="page-title">Boer War Golf Tour</div>
+      ${pageHeader('Boer War Golf Tour', 'Anglo Boer War Golf Tour')}
       <div class="card">
         <div class="h2">Couldn't load data</div>
         <div class="body subtext">${esc(state.error)}</div>
@@ -461,11 +520,11 @@ function render() {
   }
 
   if (!state.data) {
-    root.innerHTML = `<div class="page-title">Boer War Golf Tour</div><div class="loading">Loading…</div>`;
+    root.innerHTML = `${pageHeader('Boer War Golf Tour', 'Anglo Boer War Golf Tour')}<div class="loading">Loading…</div>`;
     return;
   }
 
-  const title = `<div class="page-title">${esc(TAB_TITLES[state.tab])}</div>`;
+  const title = pageHeader(TAB_TITLES[state.tab], TAB_SUBTITLES[state.tab]);
 
   const tabs = `
     <div class="tabbar">

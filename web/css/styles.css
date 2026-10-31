@@ -1,21 +1,30 @@
-/* Same design tokens as the app (app/src/theme/index.ts). Dark mode only. */
+/* Same design tokens as the app (app/src/theme/index.ts). "Clubhouse
+   parchment" light theme: cream paper, dark ink, heritage green, brass. */
 :root {
-  --bg: #121212;
-  --surface: #1d1d1d;
-  --surface-alt: #262626;
-  --text: #f3f3f3;
-  --subtext: #989898;
-  --border: rgba(255, 255, 255, 0.08);
-  --divider: rgba(255, 255, 255, 0.06);
+  --bg: #f4efe4;
+  --surface: #fcf9f2;
+  --surface-alt: #eae2d3;
+  --surface-raised: #ffffff;
+  --text: #26211a;
+  --subtext: #6f6556;
+  --border: rgba(38, 33, 26, 0.12);
+  --divider: rgba(38, 33, 26, 0.08);
+  --stripe: rgba(38, 33, 26, 0.035);
 
-  --accent: #b79275;
-  --accent-pressed: #9c704e;
-  --accent-muted: rgba(183, 146, 117, 0.16);
-  --on-accent: #1a1206;
+  --accent: #3f5a47;
+  --accent-pressed: #304535;
+  --accent-muted: rgba(63, 90, 71, 0.12);
+  --on-accent: #fbf7ee;
+  --brass: #a9823f;
+  --brass-muted: rgba(169, 130, 63, 0.18);
+  --danger: #8b3a31;
+
+  --shadow-card: 0 6px 14px rgba(58, 47, 32, 0.07);
+  --shadow-raised: 0 10px 22px rgba(58, 47, 32, 0.12);
 
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-lg: 18px;
   --radius-pill: 999px;
 
   --space-xs: 4px;
@@ -49,21 +58,25 @@ body {
 h1, h2, h3 { margin: 0; }
 p { margin: 0; }
 
-/* Default text alignment is centre app-wide, matching the app. Scannable
-   lists (leaderboards, past-tournament rows) and the page title are the
-   explicit left-aligned exceptions, set directly on their own rules below. */
-.page-title { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; padding: var(--space-xs) 0; }
-.display { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; text-align: center; }
-.h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; text-align: center; }
-.h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.1px; text-align: center; }
-.body { font-size: 15px; text-align: center; }
-.body-strong { font-size: 15px; font-weight: 600; text-align: center; }
-.small { font-size: 13px; text-align: center; }
-.small-strong { font-size: 13px; font-weight: 700; text-align: center; }
-.caption { font-size: 11px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; text-align: center; }
+/* Default text alignment is left app-wide, matching the app. Hero scores and
+   empty states opt back into centre on their own rules. */
+.page-title { font-family: Georgia, 'Times New Roman', serif; font-size: 27px; font-weight: 700; letter-spacing: -0.4px; padding: var(--space-xs) 0; }
+.page-header { display: flex; flex-direction: column; gap: 2px; padding: var(--space-xs) 0 var(--space-md); border-bottom: 1px solid var(--divider); }
+.page-tagline { font-size: 13px; color: var(--subtext); }
+.eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--brass); }
+.icon { width: 16px; height: 16px; flex-shrink: 0; }
+.display { font-family: Georgia, 'Times New Roman', serif; font-size: 42px; font-weight: 700; letter-spacing: -1px; text-align: center; }
+.h1 { font-family: Georgia, 'Times New Roman', serif; font-size: 27px; font-weight: 700; letter-spacing: -0.4px; text-align: left; }
+.h2 { font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 700; letter-spacing: -0.2px; text-align: left; }
+.body { font-size: 15px; line-height: 21px; text-align: left; }
+.body-strong { font-size: 15px; line-height: 21px; font-weight: 600; text-align: left; }
+.small { font-size: 13px; line-height: 18px; text-align: left; }
+.small-strong { font-size: 13px; line-height: 18px; font-weight: 700; text-align: left; }
+.caption { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; text-align: left; }
 
 .subtext { color: var(--subtext); }
 .accent-text { color: var(--accent); }
+.brass-text { color: var(--brass); }
 .winner-label { color: var(--accent); font-weight: 800; }
 .left-text { text-align: left; }
 
@@ -75,9 +88,10 @@ p { margin: 0; }
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+  box-shadow: var(--shadow-card);
 }
 
-.card.elevated { background: var(--surface-alt); }
+.card.elevated { background: var(--surface-raised); box-shadow: var(--shadow-raised); }
 
 /* Top-level tab bar (Stats / Active Tournament / Historical) */
 .tabbar {
@@ -86,9 +100,10 @@ p { margin: 0; }
   z-index: 5;
   display: flex;
   gap: var(--space-xs);
-  background: var(--bg);
+  background: var(--surface);
   padding: var(--space-md) 0;
   border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
 }
 
 .tab-btn {
@@ -165,15 +180,34 @@ button { font-family: inherit; }
 .match-row {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: var(--space-xs);
   padding: var(--space-sm) 0;
   border-bottom: 1px solid var(--divider);
 }
 
 .match-row:last-child { border-bottom: none; }
+.match-meta { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
+.match-no { color: var(--brass); }
+.match-teams { display: flex; align-items: center; gap: var(--space-sm); }
+.match-team { flex: 1; text-align: left; }
+.match-team.right { text-align: right; }
+.match-vs { color: var(--subtext); }
 
-.match-players { display: flex; align-items: center; justify-content: center; gap: var(--space-sm); flex-wrap: wrap; }
+/* Section heading with a rule, matching the app. */
+.section { display: flex; flex-direction: column; gap: var(--space-sm); }
+.section-head { display: flex; align-items: center; gap: var(--space-sm); padding: 0 var(--space-xs); }
+.section-rule { flex: 1; height: 1px; background: var(--border); }
+.section-card { gap: var(--space-xs); }
+
+/* Tournament / series hero. */
+.hero { gap: var(--space-sm); }
+.series-card { gap: var(--space-sm); }
+.series-bar { display: flex; gap: 3px; height: 6px; border-radius: var(--radius-pill); overflow: hidden; margin-top: var(--space-xs); }
+.series-seg { height: 6px; border-radius: var(--radius-pill); }
+.standing-vs { align-self: center; }
+
+.card-head { display: flex; align-items: center; gap: var(--space-sm); }
+.card-head .icon { color: var(--brass); }
 
 /* Player icon: ring (border matches page background so it recedes, like the
    emblem below) + a clipped inner wrapper that zooms the source icon past
@@ -201,8 +235,8 @@ button { font-family: inherit; }
 }
 
 .player-icon-clip img {
-  width: 135%;
-  height: 135%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
@@ -218,7 +252,7 @@ button { font-family: inherit; }
 }
 
 .lb-row:last-child { border-bottom: none; }
-.lb-row.alt { background: var(--surface-alt); }
+.lb-row.alt { background: var(--stripe); }
 .lb-header { border-bottom: 1px solid var(--border); }
 .lb-pos { width: 28px; text-align: center; flex-shrink: 0; }
 .lb-icon { width: 32px; display: inline-flex; justify-content: center; flex-shrink: 0; }
@@ -238,6 +272,8 @@ button { font-family: inherit; }
   justify-content: center;
 }
 
+.rank-pill.top { background: var(--brass-muted); color: var(--brass); }
+
 /* Team emblem: ring matches page background, image zoomed past its own edge
    so nothing but flag color reaches the border. */
 .emblem-wrap {
@@ -255,7 +291,7 @@ button { font-family: inherit; }
 .emblem-wrap.sm { width: 44px; height: 44px; border-width: 1.5px; }
 .emblem-wrap.xs { width: 20px; height: 20px; border-width: 1.5px; }
 
-.emblem-wrap img { width: 112%; height: 112%; object-fit: cover; }
+.emblem-wrap img { width: 100%; height: 100%; object-fit: cover; }
 
 .emblem-row { display: flex; align-items: center; justify-content: center; gap: var(--space-xxl); }
 .emblem-col { display: flex; flex-direction: column; align-items: center; gap: var(--space-sm); }
@@ -264,10 +300,15 @@ button { font-family: inherit; }
 .compare-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--space-sm); }
 .compare-divider { width: 1px; align-self: stretch; background: var(--border); margin: var(--space-xs) 0; }
 
-.stat-row-header { display: flex; align-items: center; justify-content: center; gap: var(--space-xs); }
+.stat-list { padding: var(--space-xs) var(--space-lg); gap: 0; }
+.stat-row { display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-md) 0; }
+.stat-row-divider { height: 1px; background: var(--divider); }
+.stat-row-header { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-xs); }
+.stat-row-header .icon { color: var(--subtext); }
+.stat-value { line-height: 1.2; }
 .row-divider { height: 1px; background: var(--divider); margin: var(--space-md) 0; }
 
-.record-card { border-color: var(--accent-muted); border-width: 1.5px; }
+.record-card { border-color: var(--brass-muted); border-width: 1.5px; }
 .record-title { display: flex; align-items: center; justify-content: center; gap: var(--space-xs); }
 .pyramid { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .pyramid-row { display: flex; gap: var(--space-md); }
@@ -305,8 +346,19 @@ button { font-family: inherit; }
 
 .pt-row { cursor: pointer; }
 .pt-record { width: 56px; text-align: center; flex-shrink: 0; }
-.pt-pct { width: 52px; text-align: center; flex-shrink: 0; }
-.pt-detail { padding: 0 0 var(--space-md); }
+.pt-pct { width: 58px; text-align: center; flex-shrink: 0; }
+.pt-pct-cell { width: 58px; display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
+.pct-track { width: 100%; height: 3px; border-radius: var(--radius-pill); background: var(--accent-muted); overflow: hidden; }
+.pct-fill { display: block; height: 3px; border-radius: var(--radius-pill); background: var(--accent); }
+.pt-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  margin: 0 var(--space-xs) var(--space-md);
+  padding: var(--space-sm);
+}
 
 .back-link {
   display: inline-flex;
